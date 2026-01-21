@@ -1,8 +1,8 @@
 package com.schoolOps.SchoolOPS.entity;
 
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -61,7 +61,7 @@ public class User {
     @Column(length = 15)
     private Long mobile;
 
-    private LocalDate dob;
+    private Date dob;
 
     @Column(length = 255)
     private String profile;

@@ -24,7 +24,7 @@ public class Account {
     // ---------- PRIMARY KEY ----------
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long acid;
+    private Long id;
 
     // ---------- RELATIONSHIPS ----------
     @OneToOne(fetch = FetchType.LAZY)
@@ -53,7 +53,7 @@ public class Account {
 
     @PreUpdate
     protected void onUpdate() {
-        log.debug("Account updated | id={}", acid);
+        log.debug("Account updated | id={}", id);
     }
 }
 
