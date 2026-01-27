@@ -4,12 +4,14 @@ package com.schoolOps.SchoolOPS.controller;
 import java.security.Principal;
 import java.util.List;
 
+import com.schoolOps.SchoolOPS.entity.*;
+import com.schoolOps.SchoolOPS.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.schoolOps.SchoolOPS.entity.*;
-import com.schoolOps.SchoolOPS.service.*;
+import com.schoolOps.SchoolOPS.dto.*;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,8 +34,14 @@ public class AdminController {
     // =================================================
 
     @GetMapping("/teachers")
-    public ResponseEntity<List<Teacher>> getAllTeachers() {
-        return ResponseEntity.ok(teacherService.getAllTeachers());
+    public ResponseEntity<List<TeacherResponseDto>> getAllTeachers() {
+        List<Teacher> teachers = teacherService.getAllTeachers();
+        teachers.forEach(teacher -> {
+            if (teacher.getCourses() != null) {
+                teacher.getCourses().size();
+            }
+        });
+        return ResponseEntity.ok(teachers.stream().map(TeacherResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     @PostMapping("/teachers")
@@ -63,8 +71,14 @@ public class AdminController {
     // =================================================
 
     @GetMapping("/courses")
-    public ResponseEntity<List<Course>> getAllCourses() {
-        return ResponseEntity.ok(courseService.getAllCourses());
+    public ResponseEntity<List<CourseResponseDto>> getAllCourses() {
+        List<Course> courses = courseService.getAllCourses();
+        courses.forEach(course -> {
+            if (course.getStudents() != null) {
+                course.getStudents().size();
+            }
+        });
+        return ResponseEntity.ok(courses.stream().map(CourseResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     @PostMapping("/courses")
@@ -101,8 +115,14 @@ public class AdminController {
     // =================================================
 
     @GetMapping("/students")
-    public ResponseEntity<List<Student>> getAllStudents() {
-        return ResponseEntity.ok(studentService.getAllStudents());
+    public ResponseEntity<List<StudentResponseDto>> getAllStudents() {
+        List<Student> students = studentService.getAllStudents();
+        students.forEach(student -> {
+            if (student.getCourses() != null) {
+                student.getCourses().size();
+            }
+        });
+        return ResponseEntity.ok(students.stream().map(StudentResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     @PostMapping("/students")
@@ -142,8 +162,17 @@ public class AdminController {
     // =================================================
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+        users.forEach(user -> {
+            if (user.getStudent() != null && user.getStudent().getCourses() != null) {
+                user.getStudent().getCourses().size();
+            }
+            if (user.getTeacher() != null && user.getTeacher().getCourses() != null) {
+                user.getTeacher().getCourses().size();
+            }
+        });
+        return ResponseEntity.ok(users.stream().map(UserResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     @PostMapping("/users")
@@ -156,8 +185,8 @@ public class AdminController {
     // =================================================
 
     @GetMapping("/enquiries")
-    public ResponseEntity<List<Enquery>> getEnquiries() {
-        return ResponseEntity.ok(enqueryService.getAllEnquery());
+    public ResponseEntity<List<EnqueryResponseDto>> getEnquiries() {
+        return ResponseEntity.ok(enqueryService.getAllEnquery().stream().map(EnqueryResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     @DeleteMapping("/enquiries/{id}")
@@ -177,8 +206,8 @@ public class AdminController {
     // =================================================
 
     @GetMapping("/notices")
-    public ResponseEntity<List<Notice>> getNotices() {
-        return ResponseEntity.ok(noticeService.getAllSortedNotice());
+    public ResponseEntity<List<NoticeResponseDto>> getNotices() {
+        return ResponseEntity.ok(noticeService.getAllSortedNotice().stream().map(NoticeResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     @PostMapping("/notices")
@@ -204,8 +233,8 @@ public class AdminController {
     // =================================================
 
     @GetMapping("/gallery")
-    public ResponseEntity<List<Gallery>> getGallery() {
-        return ResponseEntity.ok(galleryService.getAllByDate());
+    public ResponseEntity<List<GalleryResponseDto>> getGallery() {
+        return ResponseEntity.ok(galleryService.getAllByDate().stream().map(GalleryResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     @PostMapping("/gallery")

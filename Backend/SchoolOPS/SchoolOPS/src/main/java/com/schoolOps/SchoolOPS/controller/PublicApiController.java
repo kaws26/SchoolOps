@@ -5,9 +5,13 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
+import com.schoolOps.SchoolOPS.dto.CourseResponseDto;
+import com.schoolOps.SchoolOPS.dto.GalleryResponseDto;
+import com.schoolOps.SchoolOPS.dto.EnqueryRequestDto;
+import java.util.stream.Collectors;
+
 import com.schoolOps.SchoolOPS.entity.Course;
 import com.schoolOps.SchoolOPS.entity.Enquery;
-import com.schoolOps.SchoolOPS.entity.Gallery;
 import com.schoolOps.SchoolOPS.entity.User;
 import com.schoolOps.SchoolOPS.service.CourseService;
 import com.schoolOps.SchoolOPS.service.EnqueryService;
@@ -37,8 +41,15 @@ public class PublicApiController {
     @GetMapping("/home")
     public ResponseEntity<?> homeData() {
         List<Course> courses = courseService.getAllCourses();
+        // Ensure students are loaded
+        courses.forEach(course -> {
+            if (course.getStudents() != null) {
+                course.getStudents().size();
+            }
+        });
+        List<CourseResponseDto> courseDtos = courses.stream().map(CourseResponseDto::fromEntity).collect(Collectors.toList());
         return ResponseEntity.ok(
-                Map.of("courses", courses)
+                Map.of("courses", courseDtos)
         );
     }
 
@@ -46,8 +57,8 @@ public class PublicApiController {
     // STATIC PAGES DATA (optional)
     // =================================================
     @GetMapping("/gallery")
-    public ResponseEntity<List<Gallery>> gallery() {
-        return ResponseEntity.ok(galleryService.getAllByDate());
+    public ResponseEntity<List<GalleryResponseDto>> gallery() {
+        return ResponseEntity.ok(galleryService.getAllByDate().stream().map(GalleryResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     // =================================================
@@ -99,7 +110,8 @@ public class PublicApiController {
     // ENQUERY
     // =================================================
     @PostMapping("/enquery")
-    public ResponseEntity<?> submitEnquery(@RequestBody Enquery enquery) {
+    public ResponseEntity<?> submitEnquery(@RequestBody EnqueryRequestDto enqueryDto) {
+        Enquery enquery = enqueryDto.toEntity();
         enqueryService.saveEnquery(enquery);
         return ResponseEntity.ok(
                 Map.of("message", "Enquiry submitted successfully")

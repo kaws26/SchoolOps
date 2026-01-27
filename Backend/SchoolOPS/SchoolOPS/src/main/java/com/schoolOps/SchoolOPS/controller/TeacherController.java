@@ -4,6 +4,10 @@ package com.schoolOps.SchoolOPS.controller;
 import java.security.Principal;
 import java.util.List;
 
+import com.schoolOps.SchoolOPS.dto.*;
+
+import java.util.stream.Collectors;
+
 import com.schoolOps.SchoolOPS.entity.*;
 import com.schoolOps.SchoolOPS.service.*;
 import org.springframework.web.bind.annotation.*;
@@ -27,19 +31,31 @@ public class TeacherController {
     // TEACHER PROFILE
     // =================================================
     @GetMapping("/profile")
-    public Teacher getTeacherProfile(Principal principal) {
+    public TeacherResponseDto getTeacherProfile(Principal principal) {
         User user = userService.getUserByUsername(principal.getName());
-        return user.getTeacher();
+        Teacher teacher = user.getTeacher();
+        // Ensure courses are loaded
+        if (teacher.getCourses() != null) {
+            teacher.getCourses().size();
+        }
+        return TeacherResponseDto.fromEntity(teacher);
     }
 
     // =================================================
     // COURSES
     // =================================================
     @GetMapping("/courses")
-    public List<Course> getCourses(Principal principal) {
+    public List<CourseResponseDto> getCourses(Principal principal) {
         Teacher teacher =
                 userService.getUserByUsername(principal.getName()).getTeacher();
-        return teacher.getCourses();
+        List<Course> courses = teacher.getCourses();
+        // Ensure students are loaded for each course
+        courses.forEach(course -> {
+            if (course.getStudents() != null) {
+                course.getStudents().size();
+            }
+        });
+        return courses.stream().map(CourseResponseDto::fromEntity).collect(Collectors.toList());
     }
 
     // =================================================
@@ -59,7 +75,7 @@ public class TeacherController {
     }
 
     @GetMapping("/attendance/{courseId}")
-    public List<Attendence> getAttendance(
+    public List<AttendenceResponseDto> getAttendance(
             @PathVariable Long courseId,
             Principal principal
     ) {
@@ -69,26 +85,40 @@ public class TeacherController {
         Course course =
                 teacherService.getCourseById(teacher, courseId);
 
-        return course.getAttendence();
+        List<Attendence> attendences = course.getAttendence();
+        // Ensure students are loaded
+        attendences.forEach(att -> {
+            if (att.getStudents() != null) {
+                att.getStudents().size();
+            }
+        });
+        return attendences.stream().map(AttendenceResponseDto::fromEntity).collect(Collectors.toList());
     }
 
     // =================================================
     // NOTICE BOARD
     // =================================================
     @GetMapping("/notices")
-    public List<Notice> getNotices() {
-        return noticeService.getAllSortedNotice();
+    public List<NoticeResponseDto> getNotices() {
+        return noticeService.getAllSortedNotice().stream().map(NoticeResponseDto::fromEntity).collect(Collectors.toList());
     }
 
     // =================================================
     // CLASSROOM
     // =================================================
     @GetMapping("/classroom/{courseId}")
-    public List<ClassWork> getClassroom(
+    public List<ClassWorkResponseDto> getClassroom(
             @PathVariable Long courseId
     ) {
         Course course = courseService.getCourseById(courseId);
-        return course.getClassRoom().getClasswork();
+        List<ClassWork> classWorks = course.getClassRoom().getClasswork();
+        // Ensure works are loaded
+        classWorks.forEach(cw -> {
+            if (cw.getWorks() != null) {
+                cw.getWorks().size();
+            }
+        });
+        return classWorks.stream().map(ClassWorkResponseDto::fromEntity).collect(Collectors.toList());
     }
 
     // -------------------------------------------------

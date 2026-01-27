@@ -6,7 +6,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.schoolOps.SchoolOPS.dto.*;
 import com.schoolOps.SchoolOPS.entity.*;
 import com.schoolOps.SchoolOPS.service.*;
 import org.json.JSONObject;
@@ -37,26 +39,32 @@ public class StudentController {
     // STUDENT PROFILE
     // =================================================
     @GetMapping("/profile")
-    public Student getStudentProfile(Principal principal) {
+    public StudentResponseDto getStudentProfile(Principal principal) {
         User user = userService.getUserByUsername(principal.getName());
-        return user.getStudent();
+        Student student = user.getStudent();
+        // Ensure courses are loaded
+        if (student.getCourses() != null) {
+            student.getCourses().size(); // initialize lazy collection
+        }
+        return StudentResponseDto.fromEntity(student);
     }
 
     // =================================================
     // NOTICE BOARD
     // =================================================
     @GetMapping("/notices")
-    public List<Notice> getNotices() {
-        return noticeService.getAllSortedNotice();
+    public List<NoticeResponseDto> getNotices() {
+        return noticeService.getAllSortedNotice().stream().map(NoticeResponseDto::fromEntity).collect(Collectors.toList());
     }
 
     // =================================================
     // COURSES
     // =================================================
     @GetMapping("/courses")
-    public List<Course> getCourses(Principal principal) {
+    public List<CourseResponseDto> getCourses(Principal principal) {
         User user = userService.getUserByUsername(principal.getName());
-        return user.getStudent().getCourses();
+        List<Course> courses = user.getStudent().getCourses();
+        return courses.stream().map(CourseResponseDto::fromEntity).collect(Collectors.toList());
     }
 
     // =================================================
@@ -85,11 +93,16 @@ public class StudentController {
     // ACCOUNT
     // =================================================
     @GetMapping("/account")
-    public Object getAccount(Principal principal) {
-        return userService
+    public AccountResponseDto getAccount(Principal principal) {
+        Account account = userService
                 .getUserByUsername(principal.getName())
                 .getStudent()
                 .getAccount();
+        // Ensure transactions are loaded
+        if (account.getTransactions() != null) {
+            account.getTransactions().size();
+        }
+        return AccountResponseDto.fromEntity(account);
     }
 
     // =================================================
