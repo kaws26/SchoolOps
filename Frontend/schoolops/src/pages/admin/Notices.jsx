@@ -6,10 +6,11 @@ const Notices = () => {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingNotice, setViewingNotice] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
-    content: '',
-    priority: 'NORMAL'
+    description: ''
   });
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -36,27 +37,43 @@ const Notices = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const submitData = new FormData();
-      submitData.append('notice', JSON.stringify(formData));
+      // Normalize form data
+      const normalizedFormData = {
+        title: formData.title || null,
+        description: formData.description || null
+      };
+
+      const formDataToSend = new FormData();
+      // Send the notice data as a JSON blob with application/json content type
+      formDataToSend.append('notice', new Blob([JSON.stringify(normalizedFormData)], { type: 'application/json' }));
+
       if (selectedFile) {
-        submitData.append('file', selectedFile);
+        formDataToSend.append('file', selectedFile);
       }
+
+      // Get auth headers without Content-Type (let browser set it for multipart/form-data)
+      const headers = auth.getAuthHeaders();
+      delete headers['Content-Type'];
 
       const response = await fetch(`${API_BASE_URL}/api/admin/notices`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${auth.getToken()}`
-        },
-        body: submitData
+        headers: headers,
+        body: formDataToSend
       });
 
       if (response.ok) {
         fetchNotices();
         setShowModal(false);
         resetForm();
+        alert('Notice created successfully!');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error creating notice:', errorData);
+        alert('Failed to create notice. Please try again.');
       }
     } catch (error) {
       console.error('Error creating notice:', error);
+      alert('An error occurred while creating the notice.');
     }
   };
 
@@ -69,18 +86,26 @@ const Notices = () => {
         });
         if (response.ok) {
           fetchNotices();
+          alert('Notice deleted successfully!');
+        } else {
+          alert('Failed to delete notice.');
         }
       } catch (error) {
         console.error('Error deleting notice:', error);
+        alert('An error occurred while deleting the notice.');
       }
     }
+  };
+
+  const handleViewNotice = (notice) => {
+    setViewingNotice(notice);
+    setShowViewModal(true);
   };
 
   const resetForm = () => {
     setFormData({
       title: '',
-      content: '',
-      priority: 'NORMAL'
+      description: ''
     });
     setSelectedFile(null);
   };
@@ -91,7 +116,19 @@ const Notices = () => {
   };
 
   const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
+    setSelectedFile(e.target.files && e.target.files[0]);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {
@@ -115,76 +152,73 @@ const Notices = () => {
         </button>
       </div>
 
-      <div className="card shadow">
-        <div className="card-body">
-          <div className="table-responsive">
-            <table className="table table-hover">
-              <thead className="table-light">
-                <tr>
-                  <th>Title</th>
-                  <th>Content</th>
-                  <th>Priority</th>
-                  <th>Issued By</th>
-                  <th>Date</th>
-                  <th>Attachment</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {notices.map(notice => (
-                  <tr key={notice.id}>
-                    <td>
-                      <strong>{notice.title}</strong>
-                    </td>
-                    <td>
-                      <div style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {notice.content}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`badge ${
-                        notice.priority === 'HIGH' ? 'bg-danger' :
-                        notice.priority === 'MEDIUM' ? 'bg-warning' :
-                        'bg-secondary'
-                      }`}>
-                        {notice.priority}
-                      </span>
-                    </td>
-                    <td>{notice.issueby}</td>
-                    <td>{new Date(notice.createdDate).toLocaleDateString()}</td>
-                    <td>
-                      {notice.fileName ? (
-                        <a
-                          href={`/api/files/${notice.fileName}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-sm btn-outline-primary"
-                        >
-                          <i className="bi bi-file-earmark"></i> View
-                        </a>
-                      ) : (
-                        <span className="text-muted">No file</span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(notice.id)}
-                      >
-                        <i className="bi bi-trash"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="row">
+        {notices.map(notice => (
+          <div key={notice.id} className="col-md-6 col-lg-4 mb-4">
+            <div className="card h-100 shadow-sm hover-shadow" style={{ cursor: 'pointer' }}>
+              <div onClick={() => handleViewNotice(notice)}>
+                {notice.image ? (
+                  <img
+                    src={notice.image}
+                    className="card-img-top"
+                    alt={notice.title}
+                    style={{ height: '200px', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div
+                    className="card-img-top bg-light d-flex align-items-center justify-content-center"
+                    style={{ height: '200px' }}
+                  >
+                    <i className="bi bi-megaphone text-secondary" style={{ fontSize: '3rem' }}></i>
+                  </div>
+                )}
+                <div className="card-body">
+                  <h5 className="card-title text-primary">{notice.title}</h5>
+                  <p className="card-text text-muted small">
+                    {notice.description && notice.description.length > 100
+                      ? `${notice.description.substring(0, 100)}...`
+                      : notice.description}
+                  </p>
+                  <div className="d-flex justify-content-between align-items-center mt-3">
+                    <small className="text-muted">
+                      <i className="bi bi-person me-1"></i>
+                      {notice.issueby}
+                    </small>
+                    <small className="text-muted">
+                      <i className="bi bi-calendar me-1"></i>
+                      {formatDate(notice.date)}
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <div className="card-footer bg-transparent border-top-0">
+                <button
+                  className="btn btn-sm btn-outline-danger w-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(notice.id);
+                  }}
+                >
+                  <i className="bi bi-trash me-2"></i>Delete
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
+
+        {notices.length === 0 && (
+          <div className="col-12">
+            <div className="text-center py-5">
+              <i className="bi bi-clipboard-x text-muted" style={{ fontSize: '4rem' }}></i>
+              <p className="text-muted mt-3">No notices found. Create your first notice!</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Notice Modal */}
       <div className={`modal fade ${showModal ? 'show d-block' : ''}`} tabIndex="-1">
-        <div className="modal-dialog modal-xl">
+        <div className="modal-dialog modal-lg">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Add New Notice</h5>
@@ -198,48 +232,43 @@ const Notices = () => {
               <div className="modal-body">
                 <div className="row g-3">
                   <div className="col-12">
-                    <label className="form-label">Title</label>
+                    <label className="form-label">Title *</label>
                     <input
                       type="text"
                       className="form-control"
                       value={formData.title}
                       onChange={(e) => setFormData({...formData, title: e.target.value})}
                       required
+                      maxLength={150}
                     />
+                    <small className="text-muted">Maximum 150 characters</small>
                   </div>
                   <div className="col-12">
-                    <label className="form-label">Content</label>
+                    <label className="form-label">Description *</label>
                     <textarea
                       className="form-control"
                       rows="6"
-                      value={formData.content}
-                      onChange={(e) => setFormData({...formData, content: e.target.value})}
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
                       required
                     ></textarea>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Priority</label>
-                    <select
-                      className="form-select"
-                      value={formData.priority}
-                      onChange={(e) => setFormData({...formData, priority: e.target.value})}
-                    >
-                      <option value="LOW">Low</option>
-                      <option value="NORMAL">Normal</option>
-                      <option value="MEDIUM">Medium</option>
-                      <option value="HIGH">High</option>
-                    </select>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Attachment (Optional)</label>
+                  <div className="col-12">
+                    <label className="form-label">Image (Optional)</label>
                     <input
                       type="file"
                       className="form-control"
                       onChange={handleFileChange}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      accept="image/*"
                     />
                     <div className="form-text">
-                      Accepted formats: PDF, DOC, DOCX, JPG, PNG
+                      Accepted formats: JPG, JPEG, PNG, GIF
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="alert alert-info">
+                      <i className="bi bi-info-circle me-2"></i>
+                      The notice will be automatically timestamped and attributed to you.
                     </div>
                   </div>
                 </div>
@@ -253,7 +282,7 @@ const Notices = () => {
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Add Notice
+                  <i className="bi bi-plus-circle me-2"></i>Add Notice
                 </button>
               </div>
             </form>
@@ -261,7 +290,100 @@ const Notices = () => {
         </div>
       </div>
 
-      {showModal && <div className="modal-backdrop fade show"></div>}
+      {/* View Notice Modal */}
+      <div className={`modal fade ${showViewModal ? 'show d-block' : ''}`} tabIndex="-1">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Notice Details</h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowViewModal(false)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              {viewingNotice && (
+                <div>
+                  {/* Notice Image Section */}
+                  {viewingNotice.image && (
+                    <div className="text-center mb-4">
+                      <img
+                        src={viewingNotice.image}
+                        alt={viewingNotice.title}
+                        className="img-fluid rounded"
+                        style={{ maxHeight: '400px', objectFit: 'contain' }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Notice Information */}
+                  <div className="mb-3">
+                    <h4 className="text-primary">{viewingNotice.title}</h4>
+                  </div>
+
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <h6 className="text-muted">Issued By</h6>
+                      <p className="fw-bold">
+                        <i className="bi bi-person-circle me-2"></i>
+                        {viewingNotice.issueby}
+                      </p>
+                    </div>
+                    <div className="col-md-6">
+                      <h6 className="text-muted">Date & Time</h6>
+                      <p className="fw-bold">
+                        <i className="bi bi-calendar-event me-2"></i>
+                        {formatDate(viewingNotice.date)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <h6 className="text-muted">Description</h6>
+                    <div className="bg-light p-3 rounded">
+                      <p className="mb-0" style={{ whiteSpace: 'pre-wrap' }}>
+                        {viewingNotice.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowViewModal(false)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => {
+                  setShowViewModal(false);
+                  handleDelete(viewingNotice.id);
+                }}
+              >
+                <i className="bi bi-trash me-2"></i>Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {(showModal || showViewModal) && <div className="modal-backdrop fade show"></div>}
+
+      <style jsx>{`
+        .hover-shadow {
+          transition: all 0.3s ease;
+        }
+        .hover-shadow:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+      `}</style>
     </div>
   );
 };

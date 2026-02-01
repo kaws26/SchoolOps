@@ -1,18 +1,17 @@
 package com.schoolOps.SchoolOPS.service;
 
-
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import com.schoolOps.SchoolOPS.entity.Notice;
 import com.schoolOps.SchoolOPS.repository.NoticeRepository;
-import com.schoolOps.SchoolOPS.utils.SaveFile;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NoticeService {
 
     private final NoticeRepository noticeRepository;
+    private final CloudinaryService cloudinaryService;
 
     // ---------- READ ----------
     public List<Notice> getAllNotice() {
@@ -54,13 +54,13 @@ public class NoticeService {
         notice.setDate(LocalDateTime.now());
 
         if (file != null && !file.isEmpty()) {
-            String savedFile = SaveFile.saveFile(file);
-            notice.setImage(savedFile);
+            Map<String, Object> upload = cloudinaryService.uploadImage(file);
+            notice.setImageUrl(upload.get("secure_url").toString());
+            notice.setImagePublicId(upload.get("public_id").toString());
         }
 
         Notice saved = noticeRepository.save(notice);
         log.info("Notice created with image | id={}", saved.getId());
-
         return saved;
     }
 
@@ -72,12 +72,9 @@ public class NoticeService {
                         new EntityNotFoundException("Notice not found with id: " + noticeId)
                 );
 
-        if (notice.getImage() != null) {
-            SaveFile.deleteFile(notice.getImage());
-        }
+        cloudinaryService.deleteImage(notice.getImagePublicId());
 
         noticeRepository.delete(notice);
         log.info("Notice deleted | id={}", noticeId);
     }
 }
-

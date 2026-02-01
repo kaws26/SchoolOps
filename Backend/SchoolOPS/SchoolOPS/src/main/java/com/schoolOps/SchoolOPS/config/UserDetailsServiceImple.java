@@ -1,4 +1,4 @@
-package com.schoolOps.SchoolOPS.security;
+package com.schoolOps.SchoolOPS.config;
 
 
 import com.schoolOps.SchoolOPS.repository.UserRepository;

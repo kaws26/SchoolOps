@@ -1,12 +1,12 @@
 package com.schoolOps.SchoolOPS.service;
 
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.schoolOps.SchoolOPS.entity.*;
 import com.schoolOps.SchoolOPS.repository.*;
-import com.schoolOps.SchoolOPS.utils.SaveFile;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
@@ -28,6 +28,7 @@ public class StudentService {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final AttendenceRepository attendenceRepository;
+    private final CloudinaryService cloudinaryService;
 
     // ---------- CREATE / UPDATE ----------
     public Student saveStudent(Student student) {
@@ -49,10 +50,13 @@ public class StudentService {
                 );
 
         if (file != null && !file.isEmpty()) {
-            if (existing.getProfile() != null) {
-                SaveFile.deleteFile(existing.getProfile());
-            }
-            existing.setProfile(SaveFile.saveFile(file));
+
+            // delete old image if exists
+            cloudinaryService.deleteImage(existing.getProfileImagePublicId());
+
+            Map<String, Object> upload = cloudinaryService.uploadImage(file);
+            existing.setProfileImageUrl(upload.get("secure_url").toString());
+            existing.setProfileImagePublicId(upload.get("public_id").toString());
         }
 
         existing.setName(updated.getName());
@@ -119,10 +123,7 @@ public class StudentService {
             userRepository.save(user);
         }
 
-        // delete profile image
-        if (student.getProfile() != null) {
-            SaveFile.deleteFile(student.getProfile());
-        }
+        cloudinaryService.deleteImage(student.getProfileImagePublicId());
 
         // detach from courses & attendance
         if (student.getCourses() != null) {

@@ -36,27 +36,25 @@ public class AdminController {
     @GetMapping("/teachers")
     public ResponseEntity<List<TeacherResponseDto>> getAllTeachers() {
         List<Teacher> teachers = teacherService.getAllTeachers();
-        teachers.forEach(teacher -> {
-            if (teacher.getCourses() != null) {
-                teacher.getCourses().size();
-            }
-        });
         return ResponseEntity.ok(teachers.stream().map(TeacherResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
     @PostMapping("/teachers")
-    public ResponseEntity<Teacher> addTeacher(@RequestBody Teacher teacher) {
-        return ResponseEntity.ok(teacherService.saveTeacher(teacher));
+    public ResponseEntity<?> createTeacher(
+            @RequestPart("teacher") TeacherRequestDto dto,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
+        teacherService.createTeacher(dto, image);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/teachers/{id}")
-    public ResponseEntity<Void> updateTeacher(
+    public ResponseEntity<?> updateTeacher(
             @PathVariable Long id,
-            @RequestPart("teacher") Teacher teacher,
-            @RequestPart(value = "file", required = false) MultipartFile file
+            @RequestPart("teacher") TeacherRequestDto dto,
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        teacher.setId(id);
-        teacherService.updateTeacher(teacher, file);
+        teacherService.updateTeacher(id, dto, image);
         return ResponseEntity.ok().build();
     }
 
@@ -73,27 +71,34 @@ public class AdminController {
     @GetMapping("/courses")
     public ResponseEntity<List<CourseResponseDto>> getAllCourses() {
         List<Course> courses = courseService.getAllCourses();
-        courses.forEach(course -> {
-            if (course.getStudents() != null) {
-                course.getStudents().size();
-            }
-        });
         return ResponseEntity.ok(courses.stream().map(CourseResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
-    @PostMapping("/courses")
-    public ResponseEntity<Course> addCourse(@RequestBody Course course) {
-        return ResponseEntity.ok(courseService.saveCourse(course));
+    @PostMapping(
+            value = "/courses",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<Course> addCourse(
+            @RequestPart("course") Course course,
+            @RequestPart(value = "image", required = false) MultipartFile file
+    ) {
+        return ResponseEntity.ok(courseService.saveCourse(course, file));
     }
 
-    @PutMapping("/courses/{id}")
+
+    @PutMapping(
+            value = "/courses/{id}",
+            consumes = "multipart/form-data"
+    )
     public ResponseEntity<Course> updateCourse(
             @PathVariable Long id,
-            @RequestBody Course course
+            @RequestPart("course") Course course,
+            @RequestPart(value = "image", required = false) MultipartFile file
     ) {
         course.setId(id);
-        return ResponseEntity.ok(courseService.updateCourse(course));
+        return ResponseEntity.ok(courseService.updateCourse(course, file));
     }
+
 
     @DeleteMapping("/courses/{id}")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
@@ -117,11 +122,6 @@ public class AdminController {
     @GetMapping("/students")
     public ResponseEntity<List<StudentResponseDto>> getAllStudents() {
         List<Student> students = studentService.getAllStudents();
-        students.forEach(student -> {
-            if (student.getCourses() != null) {
-                student.getCourses().size();
-            }
-        });
         return ResponseEntity.ok(students.stream().map(StudentResponseDto::fromEntity).collect(Collectors.toList()));
     }
 
@@ -164,14 +164,6 @@ public class AdminController {
     @GetMapping("/users")
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        users.forEach(user -> {
-            if (user.getStudent() != null && user.getStudent().getCourses() != null) {
-                user.getStudent().getCourses().size();
-            }
-            if (user.getTeacher() != null && user.getTeacher().getCourses() != null) {
-                user.getTeacher().getCourses().size();
-            }
-        });
         return ResponseEntity.ok(users.stream().map(UserResponseDto::fromEntity).collect(Collectors.toList()));
     }
 

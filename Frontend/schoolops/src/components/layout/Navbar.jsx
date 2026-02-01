@@ -43,7 +43,7 @@ const Navbar = () => {
       <div className="collapse navbar-collapse" id="navbarNav">
         <div className="navbar-nav mx-auto">
           <Link to="/" className="nav-link">Home</Link>
-          <Link to="/classes" className="nav-link">Classes</Link>
+          <Link to="/school-home" className="nav-link">School Demo</Link>
           <Link to="/gallery" className="nav-link">Gallery</Link>
           <Link to="/contact" className="nav-link">Contact</Link>
           {userRole === 'ADMIN' && (

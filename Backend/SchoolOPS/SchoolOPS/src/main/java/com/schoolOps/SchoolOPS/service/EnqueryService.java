@@ -24,6 +24,7 @@ public class EnqueryService {
 
     // ---------- CREATE ----------
     public Enquery saveEnquery(Enquery enquery) {
+        enquery.setStatus("PENDING");
         Enquery saved = enqueryRepository.save(enquery);
         log.info("Enquery saved | id={}", saved.getId());
         return saved;

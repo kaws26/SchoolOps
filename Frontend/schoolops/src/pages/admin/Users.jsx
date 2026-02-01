@@ -120,7 +120,7 @@ const Users = () => {
                         {user.enabled ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td>{new Date(user.createdDate).toLocaleDateString()}</td>
+                    <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>

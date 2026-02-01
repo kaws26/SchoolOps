@@ -19,7 +19,7 @@ public class GalleryResponseDto {
         if (gallery == null) return null;
         return new GalleryResponseDto(
             gallery.getId(),
-            gallery.getPic(),
+            gallery.getImageUrl(),
             gallery.getAbout(),
             gallery.getDate()
         );

@@ -30,7 +30,7 @@ public class CourseResponseDto {
             course.getName(),
             course.getSession(),
             course.getDuration(),
-            course.getProfile(),
+            course.getImageUrl(),
             course.getAbout(),
             course.getFees(),
             course.getTime(),

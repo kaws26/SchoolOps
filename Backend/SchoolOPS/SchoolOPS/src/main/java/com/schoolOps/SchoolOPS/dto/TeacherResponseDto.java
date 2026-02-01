@@ -33,7 +33,7 @@ public class TeacherResponseDto {
             teacher.getName(),
             teacher.getFatherName(),
             teacher.getEmail(),
-            teacher.getProfile(),
+            teacher.getProfileImageUrl(),
             teacher.getNumbers(),
             teacher.getSalary(),
             teacher.getUser() != null ? teacher.getUser().getName() : null,

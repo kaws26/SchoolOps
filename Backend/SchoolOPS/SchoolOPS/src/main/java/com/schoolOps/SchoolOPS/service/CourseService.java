@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +32,19 @@ public class CourseService {
     private final AttendenceRepository attendenceRepository;
     private final StudentRepository studentRepository;
     private final AccountService accountService;
+    private final CloudinaryService cloudinaryService;
+
 
     // ---------- CREATE / UPDATE ----------
-    public Course saveCourse(Course course) {
+    public Course saveCourse(Course course, MultipartFile image) {
+
+        // Upload image if provided
+        if (image != null && !image.isEmpty()) {
+            var upload = cloudinaryService.uploadImage(image);
+
+            course.setImageUrl(upload.get("secure_url").toString());
+            course.setImagePublicId(upload.get("public_id").toString());
+        }
 
         Course saved = courseRepository.save(course);
 
@@ -41,17 +52,36 @@ public class CourseService {
             classRoomService.createClassRoom(saved);
         }
 
-        log.info("Course saved | courseId={}", saved.getId());
+        log.info("Course created | courseId={}", saved.getId());
         return saved;
     }
 
-    public Course updateCourse(Course course) {
+
+    public Course updateCourse(Course course, MultipartFile image) {
 
         Course existing = courseRepository.findById(course.getId())
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Course not found with id: " + course.getId())
+                        new EntityNotFoundException(
+                                "Course not found with id: " + course.getId()
+                        )
                 );
 
+        // ---------- IMAGE UPDATE ----------
+        if (image != null && !image.isEmpty()) {
+
+            String oldPublicId = existing.getImagePublicId();
+
+            // delete old image
+            if (oldPublicId != null && !oldPublicId.isBlank()) {
+                cloudinaryService.deleteImage(oldPublicId);
+            }
+
+            var upload = cloudinaryService.uploadImage(image);
+            existing.setImageUrl(upload.get("secure_url").toString());
+            existing.setImagePublicId(upload.get("public_id").toString());
+        }
+
+        // ---------- COURSE DATA UPDATE ----------
         existing.setName(course.getName());
         existing.setFees(course.getFees());
         existing.setSession(course.getSession());
@@ -65,6 +95,7 @@ public class CourseService {
         return updated;
     }
 
+
     // ---------- DELETE ----------
     public void deleteCourse(Long courseId) {
 
@@ -73,14 +104,21 @@ public class CourseService {
                         new EntityNotFoundException("Course not found with id: " + courseId)
                 );
 
-        // Detach from teacher
+        // ---------- DELETE COURSE IMAGE ----------
+        String imagePublicId = course.getImagePublicId();
+        if (imagePublicId != null && !imagePublicId.isBlank()) {
+            cloudinaryService.deleteImage(imagePublicId);
+            log.info("Course image deleted | publicId={}", imagePublicId);
+        }
+
+        // ---------- DETACH FROM TEACHER ----------
         if (course.getTeacher() != null) {
             Teacher teacher = course.getTeacher();
             teacher.getCourses().remove(course);
             teacherRepository.save(teacher);
         }
 
-        // Delete classroom & classwork
+        // ---------- DELETE CLASSROOM & CLASSWORK ----------
         if (course.getClassRoom() != null) {
             ClassRoom classRoom = course.getClassRoom();
 
@@ -94,13 +132,13 @@ public class CourseService {
             classRoomRepository.delete(classRoom);
         }
 
-        // Delete attendance
+        // ---------- DELETE ATTENDANCE ----------
         if (course.getAttendence() != null) {
             course.getAttendence().forEach(a -> a.setStudents(null));
             attendenceRepository.deleteAll(course.getAttendence());
         }
 
-        // Detach from students
+        // ---------- DETACH FROM STUDENTS ----------
         if (course.getStudents() != null) {
             course.getStudents().forEach(student -> {
                 student.getCourses().remove(course);
@@ -108,10 +146,12 @@ public class CourseService {
             });
         }
 
+        // ---------- DELETE COURSE ----------
         courseRepository.delete(course);
 
         log.info("Course deleted | courseId={}", courseId);
     }
+
 
     // ---------- FETCH ----------
     public List<Course> getAllCourses() {
