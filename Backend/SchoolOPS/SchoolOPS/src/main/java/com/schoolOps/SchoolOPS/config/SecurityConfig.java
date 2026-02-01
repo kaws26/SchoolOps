@@ -60,7 +60,7 @@ public class SecurityConfig {
                 "http://localhost:3000",      // React default
                 "http://localhost:4200",      // Angular default
                 "http://localhost:5173",       // Vite default
-                "https://school-ops-wine.vercel.app",  //my deployed 
+                "https://school-ops-wine.vercel.app"  //my deployed 
         ));
 
         // Or allow all origins (NOT recommended for production)
