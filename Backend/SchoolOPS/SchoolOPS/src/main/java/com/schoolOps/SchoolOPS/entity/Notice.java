@@ -35,7 +35,11 @@ public class Notice {
     private String issueby;
 
     @Column(length = 255)
-    private String image;
+    private String imageUrl;
+
+    @Column(length = 255)
+    private String imagePublicId;
+
 
     @Lob
     private String description;

@@ -27,7 +27,10 @@ public class Gallery {
 
     // ---------- GALLERY DETAILS ----------
     @Column(nullable = false, length = 255)
-    private String pic;
+    private String imageUrl;
+
+    @Column(nullable = false, length = 255)
+    private String imagePublicId;
 
     @Column(length = 70)
     private String about;

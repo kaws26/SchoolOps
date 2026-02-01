@@ -89,7 +89,6 @@ const Enquiries = () => {
                   <th>Subject</th>
                   <th>Message</th>
                   <th>Status</th>
-                  <th>Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -98,7 +97,7 @@ const Enquiries = () => {
                   <tr key={enquiry.id}>
                     <td>{enquiry.name}</td>
                     <td>{enquiry.email}</td>
-                    <td>{enquiry.phone}</td>
+                    <td>{enquiry.mobile}</td>
                     <td>{enquiry.subject}</td>
                     <td>
                       <div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -114,7 +113,6 @@ const Enquiries = () => {
                         {enquiry.status}
                       </span>
                     </td>
-                    <td>{new Date(enquiry.createdDate).toLocaleDateString()}</td>
                     <td>
                       {enquiry.status !== 'RESPONDED' && (
                         <button

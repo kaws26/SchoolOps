@@ -1,6 +1,6 @@
-package com.schoolOps.SchoolOPS.security;
+package com.schoolOps.SchoolOPS.config;
 
-import com.schoolOps.SchoolOPS.security.jwt.JwtFilter;
+import com.schoolOps.SchoolOPS.config.jwt.JwtFilter;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.context.annotation.Bean;
@@ -20,7 +20,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor

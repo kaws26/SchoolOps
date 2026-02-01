@@ -37,7 +37,7 @@ public class StudentResponseDto {
             student.getSex(),
             student.getFatherName(),
             student.getEmail(),
-            student.getProfile(),
+            student.getProfileImageUrl(),
             student.getAddBy(),
             student.getNumbers(),
             AddressDto.fromEntity(student.getAddress()),

@@ -64,7 +64,11 @@ public class User {
     private Date dob;
 
     @Column(length = 255)
-    private String profile;
+    private String profileImageUrl;
+
+    @Column(length = 255)
+    private String profileImagePublicId;
+
 
     // ---------- RELATIONSHIPS ----------
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)

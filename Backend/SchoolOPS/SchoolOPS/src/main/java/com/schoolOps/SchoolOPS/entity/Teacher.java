@@ -40,7 +40,10 @@ public class Teacher {
     private String email;
 
     @Column(length = 255)
-    private String profile;
+    private String profileImageUrl;
+
+    @Column(length = 255)
+    private String profileImagePublicId;
 
     @Column(length = 15)
     private Long numbers;
@@ -53,7 +56,12 @@ public class Teacher {
     @OneToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
+    )
+    @JoinColumn(name = "address_id")
     private Address address;
 
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)

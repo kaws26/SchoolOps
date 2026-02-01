@@ -49,7 +49,11 @@ public class Student {
     private String email;
 
     @Column(length = 255)
-    private String profile;
+    private String profileImageUrl;
+
+    @Column(length = 255)
+    private String profileImagePublicId;
+
 
     @Column(length = 50)
     private String addBy;

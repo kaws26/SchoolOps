@@ -1,4 +1,4 @@
-package com.schoolOps.SchoolOPS.security.jwt;
+package com.schoolOps.SchoolOPS.config.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

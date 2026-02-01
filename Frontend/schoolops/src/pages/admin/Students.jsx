@@ -10,6 +10,7 @@ const Students = () => {
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [profileFile, setProfileFile] = useState(null);
   const [formData, setFormData] = useState({
     rollNo: '',
     registrationNo: '',
@@ -18,7 +19,6 @@ const Students = () => {
     sex: '',
     fatherName: '',
     email: '',
-    profile: '',
     addBy: '',
     numbers: '',
     address: {
@@ -73,24 +73,76 @@ const Students = () => {
       const url = editingStudent ? `/api/admin/students/${editingStudent.id}` : '/api/admin/students';
       const method = editingStudent ? 'PUT' : 'POST';
 
-      const submitData = new FormData();
-      submitData.append('student', JSON.stringify(formData));
+      // Normalize form data - convert empty strings to null and parse numbers
+      const normalizedFormData = {
+        rollNo: formData.rollNo ? parseInt(formData.rollNo) : 0,
+        registrationNo: formData.registrationNo ? parseInt(formData.registrationNo) : 0,
+        name: formData.name || null,
+        dob: formData.dob || null,
+        sex: formData.sex || null,
+        fatherName: formData.fatherName || null,
+        email: formData.email || null,
+        addBy: formData.addBy || 'BY_ADMIN',
+        numbers: formData.numbers ? parseInt(formData.numbers) : null,
+        address: {
+          street: formData.address.street || null,
+          city: formData.address.city || null,
+          state: formData.address.state || null,
+          zipCode: formData.address.zipCode || null
+        }
+      };
 
-      const response = await fetch(`${API_BASE_URL}${url}`, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${auth.getToken()}`
-        },
-        body: submitData
-      });
+      if (editingStudent) {
+        // For UPDATE: use multipart/form-data
+        const formDataToSend = new FormData();
+        formDataToSend.append('student', new Blob([JSON.stringify(normalizedFormData)], { type: 'application/json' }));
+        
+        if (profileFile) {
+          formDataToSend.append('file', profileFile);
+        }
 
-      if (response.ok) {
-        fetchStudents();
-        setShowModal(false);
-        resetForm();
+        const headers = auth.getAuthHeaders();
+        delete headers['Content-Type'];
+
+        const response = await fetch(`${API_BASE_URL}${url}`, {
+          method,
+          headers: headers,
+          body: formDataToSend
+        });
+
+        if (response.ok) {
+          fetchStudents();
+          setShowModal(false);
+          resetForm();
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Error updating student:', errorData);
+          alert('Failed to update student. Please try again.');
+        }
+      } else {
+        // For CREATE: use JSON
+        const response = await fetch(`${API_BASE_URL}${url}`, {
+          method,
+          headers: {
+            ...auth.getAuthHeaders(),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(normalizedFormData)
+        });
+
+        if (response.ok) {
+          fetchStudents();
+          setShowModal(false);
+          resetForm();
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Error creating student:', errorData);
+          alert('Failed to create student. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Error saving student:', error);
+      alert('An error occurred while saving the student.');
     }
   };
 
@@ -106,9 +158,15 @@ const Students = () => {
         fetchStudents();
         setShowAddCourseModal(false);
         setAddCourseData({ courseId: '' });
+        alert('Course added successfully!');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error adding course:', errorData);
+        alert('Failed to add course. Please try again.');
       }
     } catch (error) {
       console.error('Error adding course to student:', error);
+      alert('An error occurred while adding the course.');
     }
   };
 
@@ -121,9 +179,13 @@ const Students = () => {
         });
         if (response.ok) {
           fetchStudents();
+          alert('Student deleted successfully!');
+        } else {
+          alert('Failed to delete student.');
         }
       } catch (error) {
         console.error('Error deleting student:', error);
+        alert('An error occurred while deleting the student.');
       }
     }
   };
@@ -138,8 +200,7 @@ const Students = () => {
       sex: student.sex || '',
       fatherName: student.fatherName || '',
       email: student.email || '',
-      profile: student.profile || '',
-      addBy: student.addBy || '',
+      addBy: student.addBy || 'BY_ADMIN',
       numbers: student.numbers || '',
       address: student.address || {
         street: '',
@@ -148,6 +209,7 @@ const Students = () => {
         zipCode: ''
       }
     });
+    setProfileFile(null);
     setShowModal(true);
   };
 
@@ -166,8 +228,7 @@ const Students = () => {
       sex: '',
       fatherName: '',
       email: '',
-      profile: '',
-      addBy: '',
+      addBy: 'BY_ADMIN',
       numbers: '',
       address: {
         street: '',
@@ -177,6 +238,7 @@ const Students = () => {
       }
     });
     setEditingStudent(null);
+    setProfileFile(null);
   };
 
   const openAddModal = () => {
@@ -226,39 +288,54 @@ const Students = () => {
                   <tr key={student.id}>
                     <td>{student.rollNo}</td>
                     <td>{student.registrationNo}</td>
-                    <td>{student.name}</td>
+                    <td>
+                      <div className="d-flex align-items-center">
+                        {student.profileImageUrl && (
+                          <img 
+                            src={student.profileImageUrl} 
+                            alt={student.name}
+                            className="rounded-circle me-2"
+                            style={{ width: '32px', height: '32px', objectFit: 'cover' }}
+                          />
+                        )}
+                        {student.name}
+                      </div>
+                    </td>
                     <td>{student.email}</td>
                     <td>{student.numbers}</td>
                     <td>{student.sex}</td>
                     <td>
-                      {student.courses?.length > 0 ? (
+                      {student.courseNames && student.courseNames.length > 0 ? (
                         <div>
-                          {student.courses.map(course => (
-                            <span key={course.id} className="badge bg-primary me-1">
-                              {course.name}
+                          {student.courseNames.map((courseName, index) => (
+                            <span key={index} className="badge bg-primary me-1">
+                              {courseName}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        'No courses'
+                        <span className="text-muted">No courses</span>
                       )}
                     </td>
                     <td>
                       <button
                         className="btn btn-sm btn-outline-primary me-2"
                         onClick={() => handleEdit(student)}
+                        title="Edit Student"
                       >
                         <i className="bi bi-pencil"></i>
                       </button>
                       <button
                         className="btn btn-sm btn-outline-success me-2"
                         onClick={() => handleAddCourseToStudent(student)}
+                        title="Add Course"
                       >
                         <i className="bi bi-plus-circle"></i>
                       </button>
                       <button
                         className="btn btn-sm btn-outline-danger"
                         onClick={() => handleDelete(student.id)}
+                        title="Delete Student"
                       >
                         <i className="bi bi-trash"></i>
                       </button>
@@ -295,8 +372,9 @@ const Students = () => {
                       className="form-control"
                       value={formData.rollNo}
                       onChange={(e) => setFormData({...formData, rollNo: e.target.value})}
-                      required
+                      placeholder="Auto-generated if left empty"
                     />
+                    <small className="text-muted">Leave empty for auto-generation</small>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Registration No</label>
@@ -305,11 +383,12 @@ const Students = () => {
                       className="form-control"
                       value={formData.registrationNo}
                       onChange={(e) => setFormData({...formData, registrationNo: e.target.value})}
-                      required
+                      placeholder="Auto-generated if left empty"
                     />
+                    <small className="text-muted">Leave empty for auto-generation</small>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Name</label>
+                    <label className="form-label">Name *</label>
                     <input
                       type="text"
                       className="form-control"
@@ -328,7 +407,7 @@ const Students = () => {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Email</label>
+                    <label className="form-label">Email *</label>
                     <input
                       type="email"
                       className="form-control"
@@ -344,6 +423,7 @@ const Students = () => {
                       className="form-control"
                       value={formData.numbers}
                       onChange={(e) => setFormData({...formData, numbers: e.target.value})}
+                      placeholder="e.g., 9876543210"
                     />
                   </div>
                   <div className="col-md-6">
@@ -368,26 +448,21 @@ const Students = () => {
                       <option value="Other">Other</option>
                     </select>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Added By</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formData.addBy}
-                      onChange={(e) => setFormData({...formData, addBy: e.target.value})}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Profile</label>
-                    <textarea
-                      className="form-control"
-                      value={formData.profile}
-                      onChange={(e) => setFormData({...formData, profile: e.target.value})}
-                      rows="2"
-                    />
-                  </div>
-                  <div className="col-md-12">
-                    <h6>Address</h6>
+                  {editingStudent && (
+                    <div className="col-12">
+                      <label className="form-label">Profile Image</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control"
+                        onChange={(e) => setProfileFile(e.target.files && e.target.files[0])}
+                      />
+                      <small className="text-muted">Only available when editing a student</small>
+                    </div>
+                  )}
+                  <div className="col-12">
+                    <hr />
+                    <h6 className="text-primary">Address Information</h6>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Street</label>
@@ -469,10 +544,14 @@ const Students = () => {
                     <option value="">Choose a course...</option>
                     {courses.map(course => (
                       <option key={course.id} value={course.id}>
-                        {course.name}
+                        {course.name} {course.fees && `- ₹${course.fees}`}
                       </option>
                     ))}
                   </select>
+                </div>
+                <div className="alert alert-info">
+                  <i className="bi bi-info-circle me-2"></i>
+                  Adding a course will automatically create a financial transaction for the student.
                 </div>
               </div>
               <div className="modal-footer">

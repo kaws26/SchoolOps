@@ -35,7 +35,10 @@ public class Course {
     private String duration;
 
     @Column(length = 255)
-    private String profile;
+    private String imageUrl;
+
+    @Column(length = 255)
+    private String imagePublicId;
 
     @Column(length = 2000)
     private String about;
@@ -50,7 +53,8 @@ public class Course {
     @OneToOne(mappedBy = "course", fetch = FetchType.LAZY)
     private ClassRoom classRoom;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_id") // IMPORTANT
     private Teacher teacher;
 
     @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
@@ -58,6 +62,7 @@ public class Course {
 
     @ManyToMany(mappedBy = "courses", fetch = FetchType.LAZY)
     private List<Student> students;
+
 
     // ---------- JPA CALLBACKS ----------
     @PrePersist

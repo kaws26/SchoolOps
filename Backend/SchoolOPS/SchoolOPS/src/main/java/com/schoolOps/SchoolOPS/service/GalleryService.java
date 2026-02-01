@@ -1,18 +1,17 @@
 package com.schoolOps.SchoolOPS.service;
 
-
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import com.schoolOps.SchoolOPS.entity.Gallery;
 import com.schoolOps.SchoolOPS.repository.GalleryRepository;
-import com.schoolOps.SchoolOPS.utils.SaveFile;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GalleryService {
 
     private final GalleryRepository galleryRepository;
+    private final CloudinaryService cloudinaryService;
 
     // ---------- CREATE ----------
     public Gallery saveToGallery(Gallery gallery, MultipartFile file) {
@@ -32,13 +32,15 @@ public class GalleryService {
             throw new IllegalArgumentException("Gallery image file must not be empty");
         }
 
-        String savedFileName = SaveFile.saveFile(file);
-        gallery.setPic(savedFileName);
+        Map<String, Object> upload = cloudinaryService.uploadImage(file);
+
+        gallery.setImageUrl(upload.get("secure_url").toString());
+        gallery.setImagePublicId(upload.get("public_id").toString());
         gallery.setDate(LocalDate.now());
 
         Gallery saved = galleryRepository.save(gallery);
-
         log.info("Gallery entry created | id={}", saved.getId());
+
         return saved;
     }
 
@@ -59,13 +61,9 @@ public class GalleryService {
                         new EntityNotFoundException("Gallery not found with id: " + galleryId)
                 );
 
-        if (gallery.getPic() != null) {
-            SaveFile.deleteFile(gallery.getPic());
-        }
+        cloudinaryService.deleteImage(gallery.getImagePublicId());
 
         galleryRepository.delete(gallery);
-
         log.info("Gallery entry deleted | id={}", galleryId);
     }
 }
-

@@ -20,7 +20,6 @@ public class EnqueryRequestDto {
         enquery.setEmail(this.email);
         enquery.setMobile(this.mobile);
         enquery.setSubject(this.subject);
-        enquery.setStatus(this.status);
         enquery.setName(this.name);
         enquery.setMessage(this.message);
         return enquery;

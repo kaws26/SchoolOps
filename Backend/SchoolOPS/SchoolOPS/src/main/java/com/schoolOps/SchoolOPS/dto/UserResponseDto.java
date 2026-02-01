@@ -36,7 +36,7 @@ public class UserResponseDto {
             user.getSex(),
             user.getMobile(),
             user.getDob(),
-            user.getProfile(),
+            user.getProfileImageUrl(),
             user.getCreatedAt(),
             user.getUpdatedAt(),
             user.getStudent() != null ? user.getStudent().getName() : null,

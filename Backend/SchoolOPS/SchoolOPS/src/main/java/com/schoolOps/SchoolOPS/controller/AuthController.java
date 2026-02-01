@@ -1,7 +1,7 @@
 package com.schoolOps.SchoolOPS.controller;
 
 
-import com.schoolOps.SchoolOPS.security.jwt.JwtUtil;
+import com.schoolOps.SchoolOPS.config.jwt.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 

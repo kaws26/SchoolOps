@@ -24,7 +24,7 @@ public class NoticeResponseDto {
             notice.getTitle(),
             notice.getDate(),
             notice.getIssueby(),
-            notice.getImage(),
+            notice.getImageUrl(),
             notice.getDescription()
         );
     }

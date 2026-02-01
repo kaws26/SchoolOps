@@ -1,22 +1,22 @@
 package com.schoolOps.SchoolOPS.service;
 
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import com.schoolOps.SchoolOPS.dto.TeacherRequestDto;
 import com.schoolOps.SchoolOPS.entity.*;
 import com.schoolOps.SchoolOPS.repository.*;
-import com.schoolOps.SchoolOPS.utils.SaveFile;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -29,13 +29,32 @@ public class TeacherService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
+    private final CloudinaryService cloudinaryService;
 
     // ---------- CREATE ----------
-    public Teacher saveTeacher(Teacher teacher) {
-        Teacher saved = teacherRepository.save(teacher);
-        log.info("Teacher saved | id={}", saved.getId());
-        return saved;
+    @Transactional
+    public Teacher createTeacher(TeacherRequestDto dto, MultipartFile file) {
+
+        Teacher teacher = dto.toEntity();
+        // Upload profile image to Cloudinary (if provided)
+        if (file != null && !file.isEmpty()) {
+            Map<String, Object> uploadResult = cloudinaryService.uploadImage(file);
+
+            teacher.setProfileImageUrl(
+                    uploadResult.get("secure_url").toString()
+            );
+            teacher.setProfileImagePublicId(
+                    uploadResult.get("public_id").toString()
+            );
+        }
+
+        Teacher savedTeacher = teacherRepository.save(teacher);
+
+        log.info("Teacher created successfully | id={}", savedTeacher.getId());
+
+        return savedTeacher;
     }
+
 
     // ---------- READ ----------
     public Teacher getTeacherById(Long teacherId) {
@@ -62,32 +81,50 @@ public class TeacherService {
     }
 
     // ---------- UPDATE ----------
-    public void updateTeacher(Teacher updated, MultipartFile file) {
+    public void updateTeacher(Long id, TeacherRequestDto dto, MultipartFile file) {
 
-        Teacher existing = getTeacherById(updated.getId());
+        Teacher existing = getTeacherById(id);
 
         if (file != null && !file.isEmpty()) {
-            if (existing.getProfile() != null) {
-                SaveFile.deleteFile(existing.getProfile());
+
+            String oldPublicId = existing.getProfileImagePublicId();
+
+            if (oldPublicId != null && !oldPublicId.isBlank()) {
+                cloudinaryService.deleteImage(oldPublicId);
             }
-            existing.setProfile(SaveFile.saveFile(file));
+
+
+            Map<String, Object> upload = cloudinaryService.uploadImage(file);
+            existing.setProfileImageUrl(upload.get("secure_url").toString());
+            existing.setProfileImagePublicId(upload.get("public_id").toString());
         }
 
-        existing.setName(updated.getName());
-        existing.setEmail(updated.getEmail());
-        existing.setFatherName(updated.getFatherName());
-        existing.setSalary(updated.getSalary());
-        existing.setNumbers(updated.getNumbers());
+        existing.setName(dto.getName());
+        existing.setEmail(dto.getEmail());
+        existing.setFatherName(dto.getFatherName());
+        existing.setSalary(dto.getSalary());
+        existing.setNumbers(dto.getNumbers());
+        existing.setDate(dto.getDate());
 
-        Address address = existing.getAddress();
-        if (address != null && updated.getAddress() != null) {
-            address.setCity(updated.getAddress().getCity());
-            address.setStreet(updated.getAddress().getStreet());
-            addressRepository.save(address);
+        if (dto.getAddress() != null) {
+
+            if (existing.getAddress() == null) {
+                // Create new address
+                Address address = new Address();
+                address.setCity(dto.getAddress().getCity());
+                address.setStreet(dto.getAddress().getStreet());
+
+                existing.setAddress(address); // IMPORTANT
+            } else {
+                // Update existing address
+                existing.getAddress().setCity(dto.getAddress().getCity());
+                existing.getAddress().setStreet(dto.getAddress().getStreet());
+            }
         }
+
 
         teacherRepository.save(existing);
-        log.info("Teacher updated | id={}", existing.getId());
+        log.info("Teacher updated | id={}", id);
     }
 
     // ---------- DELETE ----------
@@ -122,10 +159,7 @@ public class TeacherService {
             });
         }
 
-        // delete profile image
-        if (teacher.getProfile() != null) {
-            SaveFile.deleteFile(teacher.getProfile());
-        }
+        cloudinaryService.deleteImage(teacher.getProfileImagePublicId());
 
         teacher.setUser(null);
         teacherRepository.delete(teacher);
@@ -141,7 +175,6 @@ public class TeacherService {
                         new EntityNotFoundException("Course not found with id: " + courseId)
                 );
 
-        // present students
         List<Student> presentStudents = new ArrayList<>();
 
         if (course.getStudents() != null) {
@@ -177,4 +210,3 @@ public class TeacherService {
         );
     }
 }
-

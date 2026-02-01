@@ -6,9 +6,11 @@ const Gallery = () => {
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedGalleryItem, setSelectedGalleryItem] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: ''
+    about: '',
+    date: new Date().toISOString().split('T')[0]
   });
   const [selectedFile, setSelectedFile] = useState(null);
 
@@ -41,7 +43,10 @@ const Gallery = () => {
 
     try {
       const submitData = new FormData();
-      submitData.append('gallery', JSON.stringify(formData));
+      
+      // Create a blob from JSON and append as gallery
+      const galleryBlob = new Blob([JSON.stringify(formData)], { type: 'application/json' });
+      submitData.append('gallery', galleryBlob, 'gallery.json');
       submitData.append('file', selectedFile);
 
       const response = await fetch(`${API_BASE_URL}/api/admin/gallery`, {
@@ -56,9 +61,13 @@ const Gallery = () => {
         fetchGallery();
         setShowModal(false);
         resetForm();
+        alert('Image uploaded successfully');
+      } else {
+        alert('Failed to upload image');
       }
     } catch (error) {
       console.error('Error uploading to gallery:', error);
+      alert('Error uploading image: ' + error.message);
     }
   };
 
@@ -80,8 +89,8 @@ const Gallery = () => {
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      description: ''
+      about: '',
+      date: new Date().toISOString().split('T')[0]
     });
     setSelectedFile(null);
   };
@@ -89,6 +98,11 @@ const Gallery = () => {
   const openAddModal = () => {
     resetForm();
     setShowModal(true);
+  };
+
+  const openViewModal = (item) => {
+    setSelectedGalleryItem(item);
+    setShowViewModal(true);
   };
 
   const handleFileChange = (e) => {
@@ -125,32 +139,32 @@ const Gallery = () => {
       <div className="row g-4">
         {gallery.map(item => (
           <div key={item.id} className="col-md-4 col-lg-3">
-            <div className="card h-100 shadow">
+            <div 
+              className="card h-100 shadow"
+              onClick={() => openViewModal(item)}
+              style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
               <div className="card-img-container" style={{ height: '200px', overflow: 'hidden' }}>
                 <img
-                  src={`/api/files/${item.fileName}`}
-                  alt={item.title}
+                  src={item.pic}
+                  alt={item.about}
                   className="card-img-top"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.src = '/placeholder-image.png';
+                  }}
                 />
               </div>
               <div className="card-body d-flex flex-column">
-                <h6 className="card-title fw-bold">{item.title}</h6>
                 <p className="card-text text-muted small flex-grow-1">
-                  {item.description}
+                  {item.about ? item.about.substring(0, 100) + (item.about.length > 100 ? '...' : '') : 'No description'}
                 </p>
                 <div className="mt-auto">
                   <small className="text-muted">
-                    {new Date(item.createdDate).toLocaleDateString()}
+                    {item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}
                   </small>
-                  <div className="mt-2">
-                    <button
-                      className="btn btn-sm btn-outline-danger w-100"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      <i className="bi bi-trash me-1"></i>Delete
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -182,22 +196,13 @@ const Gallery = () => {
               <div className="modal-body">
                 <div className="row g-3">
                   <div className="col-12">
-                    <label className="form-label">Title</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label">Description</label>
+                    <label className="form-label">About/Description</label>
                     <textarea
                       className="form-control"
                       rows="3"
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      value={formData.about}
+                      onChange={(e) => setFormData({...formData, about: e.target.value})}
+                      required
                     ></textarea>
                   </div>
                   <div className="col-12">
@@ -240,6 +245,78 @@ const Gallery = () => {
       </div>
 
       {showModal && <div className="modal-backdrop fade show"></div>}
+
+      {/* View Gallery Item Modal */}
+      <div className={`modal fade ${showViewModal ? 'show d-block' : ''}`} tabIndex="-1">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Gallery Details</h5>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowViewModal(false)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              {selectedGalleryItem && (
+                <div>
+                  <div className="mb-4">
+                    <img
+                      src={selectedGalleryItem.pic}
+                      alt={selectedGalleryItem.about}
+                      className="img-fluid rounded"
+                      style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.target.src = '/placeholder-image.png';
+                      }}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <h6 className="text-muted">Description</h6>
+                    <p className="lead">
+                      {selectedGalleryItem.about || 'No description available'}
+                    </p>
+                  </div>
+                  <div className="mb-3">
+                    <h6 className="text-muted">Date</h6>
+                    <p className="lead">
+                      {selectedGalleryItem.date ? new Date(selectedGalleryItem.date).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="mb-3">
+                    <h6 className="text-muted">ID</h6>
+                    <p className="text-monospace text-muted">
+                      {selectedGalleryItem.id}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowViewModal(false)}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => {
+                  handleDelete(selectedGalleryItem.id);
+                  setShowViewModal(false);
+                }}
+              >
+                <i className="bi bi-trash me-1"></i>Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showViewModal && <div className="modal-backdrop fade show"></div>}
     </div>
   );
 };

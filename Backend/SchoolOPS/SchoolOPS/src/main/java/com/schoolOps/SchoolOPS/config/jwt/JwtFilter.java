@@ -1,4 +1,4 @@
-package com.schoolOps.SchoolOPS.security.jwt;
+package com.schoolOps.SchoolOPS.config.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

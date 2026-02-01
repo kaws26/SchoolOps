@@ -4,16 +4,16 @@ const Home = () => {
       {/* Hero Section */}
       <div className="hero-section container-fluid bg-gradient-primary px-0 mb-5">
         <div className="row align-items-center px-3 py-5">
-          <div className="col-lg-6 text-white">
+          <div className="col-lg-6 text-grey">
             <h1 className="display-4 fw-bold mb-4">Empowering Education Through Technology</h1>
             <p className="lead mb-4">Streamline school operations, enhance learning experiences, and connect educators, students, and parents in one comprehensive platform.</p>
             <div className="d-flex gap-3 flex-wrap">
               <a href="#features" className="btn btn-light btn-lg px-4">Explore Features</a>
-              <a href="/signup" className="btn btn-outline-light btn-lg px-4">Get Started</a>
+              <a href="/signup" className="btn btn-dark btn-lg px-4 ">Get Started</a>
             </div>
           </div>
           <div className="col-lg-6 text-center">
-            <img src="/img/header.png" alt="School Management System" className="img-fluid rounded shadow-lg" />
+            <img src="https://res.cloudinary.com/dzffxmfsu/image/upload/v1769874234/47300623-bc14-489d-9e6a-00b670f18473_epxp72.png" alt="School Management System" className="img-fluid rounded shadow-lg" />
           </div>
         </div>
       </div>
@@ -84,77 +84,115 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Stats Section */}
+      {/* Platform Highlights Section */}
       <div className="stats-section py-5">
         <div className="container">
           <div className="row text-center g-4">
             <div className="col-md-3">
-              <div className="stat-number">10,000+</div>
-              <p className="text-muted mb-0 fw-semibold">Students Enrolled</p>
+              <div className="stat-number">
+                <i className="bi bi-shield-check"></i>
+              </div>
+              <p className="text-muted mb-0 fw-semibold">Secure & Reliable</p>
             </div>
             <div className="col-md-3">
-              <div className="stat-number">500+</div>
-              <p className="text-muted mb-0 fw-semibold">Teachers</p>
+              <div className="stat-number">
+                <i className="bi bi-lightning-charge"></i>
+              </div>
+              <p className="text-muted mb-0 fw-semibold">Fast & Scalable</p>
             </div>
             <div className="col-md-3">
-              <div className="stat-number">50+</div>
-              <p className="text-muted mb-0 fw-semibold">Schools</p>
+              <div className="stat-number">
+                <i className="bi bi-sliders"></i>
+              </div>
+              <p className="text-muted mb-0 fw-semibold">Highly Configurable</p>
             </div>
             <div className="col-md-3">
-              <div className="stat-number">98%</div>
-              <p className="text-muted mb-0 fw-semibold">Satisfaction Rate</p>
+              <div className="stat-number">
+                <i className="bi bi-people"></i>
+              </div>
+              <p className="text-muted mb-0 fw-semibold">Built for Real Users</p>
             </div>
           </div>
         </div>
       </div>
+
 
       {/* About Section */}
       <div className="about-section py-5">
         <div className="container">
           <div className="row align-items-center">
             <div className="col-lg-6">
-              <h2 className="display-5 fw-bold text-primary mb-4">Why Choose SchoolOps?</h2>
+              <h2 className="display-5 fw-bold text-primary mb-4">
+                Built With Real School Needs in Mind
+              </h2>
+
               <p className="lead text-muted mb-4">
-                SchoolOps revolutionizes educational management by providing a unified platform that simplifies administrative tasks,
-                enhances communication, and improves learning outcomes.
+                SchoolOps is a modern school management platform designed to simplify everyday
+                academic and administrative workflows. Instead of overloading users with
+                unnecessary features, we focus on clarity, efficiency, and ease of use.
               </p>
+
+              <p className="text-muted mb-4">
+                From managing students and staff to handling schedules, communication, and reports,
+                SchoolOps brings essential school operations into one unified system that is easy
+                to adopt and scale over time.
+              </p>
+
               <ul className="list-unstyled check-list">
                 <li>
                   <i className="bi bi-check-circle-fill"></i>
-                  Cloud-based solution accessible from anywhere
+                  Clean and intuitive user experience
                 </li>
                 <li>
                   <i className="bi bi-check-circle-fill"></i>
-                  Real-time data synchronization and backup
+                  Role-based access for admins, teachers, parents, and students
                 </li>
                 <li>
                   <i className="bi bi-check-circle-fill"></i>
-                  Mobile-responsive design for all devices
+                  Designed to grow with your institution
                 </li>
                 <li>
                   <i className="bi bi-check-circle-fill"></i>
-                  24/7 customer support and training
+                  Focused on real-world usability, not marketing hype
                 </li>
               </ul>
             </div>
+
             <div className="col-lg-6">
-              <img src="/img/about.png" alt="About SchoolOps" className="img-fluid rounded shadow-lg" />
+              <img
+                src="https://res.cloudinary.com/dzffxmfsu/image/upload/v1769875105/8b2f488c-7557-4ccb-bafb-c980085bef41_natwdc.png"
+                alt="About SchoolOps"
+                className="img-fluid rounded shadow-lg"
+              />
             </div>
           </div>
         </div>
       </div>
 
+
       {/* CTA Section */}
       <div className="cta-section text-white py-5">
         <div className="container text-center">
-          <h2 className="display-5 fw-bold mb-4">Ready to Transform Your School?</h2>
-          <p className="lead mb-4">Join thousands of educational institutions already using SchoolOps to streamline their operations.</p>
+          <h2 className="display-5 fw-bold mb-4">
+            Ready to Simplify School Management?
+          </h2>
+
+          <p className="lead mb-4">
+            Explore how SchoolOps can help streamline operations, improve communication,
+            and reduce administrative overhead for your institution.
+          </p>
+
           <div className="d-flex justify-content-center gap-3 flex-wrap">
-            <a href="/contact" className="btn btn-light btn-lg px-4">Contact Us</a>
-            <a href="/signup" className="btn btn-outline-light btn-lg px-4">Start Free Trial</a>
+            <a href="/contact" className="btn btn-light btn-lg px-4">
+              Contact Us
+            </a>
+            <a href="/signup" className="btn btn-outline-light btn-lg px-4">
+              Get Started
+            </a>
           </div>
         </div>
       </div>
+
     </>
   );
 };
