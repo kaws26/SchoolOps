@@ -16,13 +16,13 @@ const Students = () => {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/classes`, {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/courses`, {
         headers: auth.getAuthHeaders()
       });
 
       if (response.ok) {
         const data = await response.json();
-        setClasses(data);
+        setClasses(Array.isArray(data) ? data : []);
       } else {
         setError('Failed to load classes');
       }
@@ -38,13 +38,17 @@ const Students = () => {
     setSelectedClass(classId);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/classes/${classId}/students`, {
-        headers: auth.getAuthHeaders()
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/search/students/by-course?courseId=${classId}`,
+        {
+          method: 'POST',
+          headers: auth.getAuthHeaders()
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        setStudents(data);
+        setStudents(Array.isArray(data) ? data : []);
       } else {
         setError('Failed to load students');
       }
@@ -55,9 +59,9 @@ const Students = () => {
   };
 
   const filteredStudents = students.filter(student =>
-    student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.rollNumber.toString().includes(searchTerm)
+    (student.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(student.rollNo || '').includes(searchTerm) ||
+    String(student.registrationNo || '').includes(searchTerm)
   );
 
   if (loading) {
@@ -88,7 +92,7 @@ const Students = () => {
           >
             <option value="">Choose a class...</option>
             {classes.map((cls) => (
-              <option key={cls.id} value={cls.id}>{cls.name} - {cls.section}</option>
+              <option key={cls.id} value={cls.id}>{cls.name} - {cls.session || cls.time || 'N/A'}</option>
             ))}
           </select>
         </div>
@@ -124,10 +128,10 @@ const Students = () => {
                 <tbody>
                   {filteredStudents.map((student) => (
                     <tr key={student.id}>
-                      <td className="fw-semibold">{student.rollNumber}</td>
-                      <td>{student.firstName} {student.lastName}</td>
+                      <td className="fw-semibold">{student.rollNo}</td>
+                      <td>{student.name}</td>
                       <td>{student.email}</td>
-                      <td>{student.phone}</td>
+                      <td>{student.numbers}</td>
                       <td>
                         <div className="btn-group btn-group-sm">
                           <button className="btn btn-outline-primary" title="View Profile">

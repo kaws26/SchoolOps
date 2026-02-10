@@ -50,6 +50,15 @@ public class User {
     @Column(nullable = false, length = 20)
     private String role;
 
+    //  FIRST LOGIN / RESET PASSWORD
+    @Column(nullable = false)
+    private boolean firstLogin = true;
+
+    @Column(length = 100)
+    private String resetToken;
+
+    private LocalDateTime resetTokenExpiry;
+
     // ---------- PROFILE ----------
     @NotBlank
     @Column(nullable = false, length = 100)
@@ -68,7 +77,6 @@ public class User {
 
     @Column(length = 255)
     private String profileImagePublicId;
-
 
     // ---------- RELATIONSHIPS ----------
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)

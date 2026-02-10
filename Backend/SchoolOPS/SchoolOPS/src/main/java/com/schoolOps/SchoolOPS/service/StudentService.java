@@ -1,15 +1,19 @@
 package com.schoolOps.SchoolOPS.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import com.schoolOps.SchoolOPS.entity.*;
 import com.schoolOps.SchoolOPS.repository.*;
+import com.schoolOps.SchoolOPS.utils.Email;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,18 +34,74 @@ public class StudentService {
     private final AttendenceRepository attendenceRepository;
     private final CloudinaryService cloudinaryService;
 
-    // ---------- CREATE / UPDATE ----------
+    private final PasswordEncoder passwordEncoder;
+    private final Email emailService;
+
+    // =====================================================
+    // CREATE STUDENT + USER (FIRST LOGIN FLOW)
+    // =====================================================
     public Student saveStudent(Student student) {
 
+        // generate registration no if missing
         if (student.getRegistrationNo() == 0) {
             student.setRegistrationNo(getNewRegNo());
         }
 
-        Student saved = studentRepository.save(student);
-        log.info("Student saved | id={}", saved.getId());
-        return saved;
+        // create user only once
+        if (student.getUser() == null) {
+
+            String rawPassword = generateInitialPassword(student);
+            String resetToken = UUID.randomUUID().toString();
+
+            User user = new User();
+            user.setUsername(student.getEmail());
+            user.setPassword(passwordEncoder.encode(rawPassword));
+            user.setRole(String.valueOf(Role.STUDENT));
+            user.setEnabled(true);
+
+            user.setName(student.getName());
+
+            user.setFirstLogin(true);
+            user.setResetToken(resetToken);
+            user.setResetTokenExpiry(LocalDateTime.now().plusHours(24));
+
+            User savedUser = userRepository.save(user);
+
+            savedUser.setStudent(student);
+            student.setUser(savedUser);
+
+            emailService.sendPasswordResetMail(
+                    student.getEmail(),
+                    resetToken
+            );
+        }
+
+
+        Student savedStudent = studentRepository.save(student);
+
+        log.info(
+                "Student saved | studentId={} | userId={}",
+                savedStudent.getId(),
+                savedStudent.getUser() != null ? savedStudent.getUser().getId() : null
+        );
+
+        return savedStudent;
     }
 
+    // =====================================================
+    // PASSWORD HELPERS
+    // =====================================================
+    private String generateInitialPassword(Student student) {
+        String firstName = student.getName()
+                .trim()
+                .split(" ")[0]
+                .toLowerCase();
+        return firstName + "@" + student.getRegistrationNo();
+    }
+
+    // =====================================================
+    // UPDATE STUDENT
+    // =====================================================
     public void updateStudent(Student updated, MultipartFile file) {
 
         Student existing = studentRepository.findById(updated.getId())
@@ -119,11 +179,13 @@ public class StudentService {
         // detach user
         User user = student.getUser();
         if (user != null) {
-            user.setStudent(null);
-            userRepository.save(user);
+           userRepository.delete(user);
         }
 
-        cloudinaryService.deleteImage(student.getProfileImagePublicId());
+        assert user != null;
+        if(user.getProfileImagePublicId()!=null){
+            cloudinaryService.deleteImage(student.getProfileImagePublicId());
+        }
 
         // detach from courses & attendance
         if (student.getCourses() != null) {

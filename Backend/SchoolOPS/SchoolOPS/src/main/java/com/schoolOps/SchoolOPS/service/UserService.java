@@ -2,11 +2,14 @@ package com.schoolOps.SchoolOPS.service;
 
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import com.schoolOps.SchoolOPS.entity.User;
 import com.schoolOps.SchoolOPS.repository.UserRepository;
 import com.schoolOps.SchoolOPS.utils.Email;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
@@ -33,7 +36,9 @@ public class UserService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    // ---------- READ ----------
+    // =================================================
+    // READ
+    // =================================================
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -56,7 +61,9 @@ public class UserService {
                 );
     }
 
-    // ---------- CREATE ----------
+    // =================================================
+    // CREATE
+    // =================================================
     public User addNewUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User saved = userRepository.save(user);
@@ -64,11 +71,54 @@ public class UserService {
         return saved;
     }
 
-    // ---------- OTP ----------
+    // =================================================
+    // SAVE (GENERIC)
+    // =================================================
+    public User save(User user) {
+        User saved = userRepository.save(user);
+        log.debug("User saved | id={}", saved.getId());
+        return saved;
+    }
+
+    // =================================================
+    // FIND BY RESET TOKEN
+    // =================================================
+    public Optional<User> findByResetToken(String resetToken) {
+        return userRepository.findByResetToken(resetToken);
+    }
+
+    // =================================================
+    // OTP
+    // =================================================
     public int sendOtp(User user) {
         int otp = emailService.sendOtp(user.getUsername());
         log.debug("OTP sent via Email service | username={}", user.getUsername());
         return otp;
     }
-}
 
+    // =================================================
+    // RESEND RESET PASSWORD LINK (OPTIONAL BUT USEFUL)
+    // =================================================
+    public void resendResetPasswordLink(User user) {
+
+        String resetToken = generateResetToken();
+
+        user.setResetToken(resetToken);
+        user.setResetTokenExpiry(LocalDateTime.now().plusHours(24));
+        userRepository.save(user);
+
+        emailService.sendPasswordResetMail(
+                user.getUsername(),
+                resetToken
+        );
+
+        log.info("Password reset link resent | userId={}", user.getId());
+    }
+
+    // =================================================
+    // HELPERS
+    // =================================================
+    private String generateResetToken() {
+        return Long.toHexString(RANDOM.nextLong()) + Long.toHexString(RANDOM.nextLong());
+    }
+}

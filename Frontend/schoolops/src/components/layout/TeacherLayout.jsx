@@ -11,7 +11,7 @@ const TeacherLayout = () => {
   useEffect(() => {
     const checkTeacherAccess = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/user/profile`, {
+        const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
           headers: auth.getAuthHeaders()
         });
         if (response.ok) {
@@ -134,7 +134,7 @@ const TeacherLayout = () => {
             >
               <i className="bi bi-list fs-5"></i>
             </button>
-            <span className="ms-3 text-muted">Welcome, {user.first_name}!</span>
+            <span className="ms-3 text-muted">Welcome, {user.name}!</span>
             <div className="ms-auto">
               <Link to="/teacher" className="text-decoration-none text-dark ms-3">
                 <i className="bi bi-person-circle fs-5"></i>

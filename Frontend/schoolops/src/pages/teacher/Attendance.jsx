@@ -18,7 +18,7 @@ const Attendance = () => {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/classes`, {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/courses`, {
         headers: auth.getAuthHeaders()
       });
 
@@ -41,13 +41,17 @@ const Attendance = () => {
     setSubmitted(false);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/classes/${classId}/students`, {
-        headers: auth.getAuthHeaders()
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/search/students/by-course?courseId=${classId}`,
+        {
+          method: 'POST',
+          headers: auth.getAuthHeaders()
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        setStudents(data);
+        setStudents(Array.isArray(data) ? data : []);
         const attendanceObj = {};
         data.forEach(student => {
           attendanceObj[student.id] = 'present';
@@ -81,14 +85,14 @@ const Attendance = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/attendance`, {
+      const presentStudentIds = Object.entries(attendance)
+        .filter(([, status]) => status === 'present')
+        .map(([studentId]) => Number(studentId));
+
+      const response = await fetch(`${API_BASE_URL}/api/teacher/attendance/${selectedClass}`, {
         method: 'POST',
         headers: auth.getAuthHeaders(),
-        body: JSON.stringify({
-          classId: selectedClass,
-          date: selectedDate,
-          attendance: attendance
-        })
+        body: JSON.stringify(presentStudentIds)
       });
 
       if (response.ok) {
@@ -134,7 +138,7 @@ const Attendance = () => {
               >
                 <option value="">Choose a class...</option>
                 {classes.map((cls) => (
-                  <option key={cls.id} value={cls.id}>{cls.name} - {cls.section}</option>
+                  <option key={cls.id} value={cls.id}>{cls.name} - {cls.session || cls.time || 'N/A'}</option>
                 ))}
               </select>
             </div>
@@ -194,8 +198,8 @@ const Attendance = () => {
                 <tbody>
                   {students.map((student) => (
                     <tr key={student.id}>
-                      <td className="fw-semibold">{student.firstName} {student.lastName}</td>
-                      <td>{student.rollNumber}</td>
+                      <td className="fw-semibold">{student.name}</td>
+                      <td>{student.rollNo}</td>
                       <td>
                         <div className="btn-group" role="group">
                           <input

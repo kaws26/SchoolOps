@@ -5,7 +5,9 @@ import API_BASE_URL from '../../config';
 const Grades = () => {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
-  const [students, setStudents] = useState([]);
+  const [classworks, setClassworks] = useState([]);
+  const [selectedClassWork, setSelectedClassWork] = useState('');
+  const [workIds, setWorkIds] = useState([]);
   const [grades, setGrades] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -17,13 +19,13 @@ const Grades = () => {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/classes`, {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/courses`, {
         headers: auth.getAuthHeaders()
       });
 
       if (response.ok) {
         const data = await response.json();
-        setClasses(data);
+        setClasses(Array.isArray(data) ? data : []);
       } else {
         setError('Failed to load classes');
       }
@@ -38,33 +40,49 @@ const Grades = () => {
   const handleClassSelect = async (classId) => {
     setSelectedClass(classId);
     setSubmitted(false);
+    setSelectedClassWork('');
+    setWorkIds([]);
+    setGrades({});
 
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/classes/${classId}/students`, {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/classroom/${classId}`, {
         headers: auth.getAuthHeaders()
       });
 
       if (response.ok) {
         const data = await response.json();
-        setStudents(data);
-        const gradesObj = {};
-        data.forEach(student => {
-          gradesObj[student.id] = student.grade || '';
-        });
-        setGrades(gradesObj);
+        setClassworks(Array.isArray(data) ? data : []);
       } else {
-        setError('Failed to load students');
+        setError('Failed to load classwork');
       }
     } catch (error) {
-      console.error('Error fetching students:', error);
-      setError('Error loading students');
+      console.error('Error fetching classwork:', error);
+      setError('Error loading classwork');
     }
   };
 
-  const handleGradeChange = (studentId, grade) => {
+  const handleClassWorkSelect = (classWorkId) => {
+    setSelectedClassWork(classWorkId);
+    setSubmitted(false);
+
+    const classwork = classworks.find(
+      (item) => String(item.id) === String(classWorkId)
+    );
+
+    const ids = classwork?.workIds || [];
+    const gradesObj = {};
+    ids.forEach((id) => {
+      gradesObj[id] = grades[id] || '';
+    });
+
+    setWorkIds(ids);
+    setGrades(gradesObj);
+  };
+
+  const handleGradeChange = (workId, grade) => {
     setGrades({
       ...grades,
-      [studentId]: grade
+      [workId]: grade
     });
   };
 
@@ -72,16 +90,26 @@ const Grades = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/grades`, {
-        method: 'POST',
-        headers: auth.getAuthHeaders(),
-        body: JSON.stringify({
-          classId: selectedClass,
-          grades: grades
-        })
-      });
+      const updates = workIds
+        .filter((id) => grades[id] !== '' && grades[id] !== null && grades[id] !== undefined)
+        .map((id) => ({
+          id: Number(id),
+          marks: Number(grades[id])
+        }));
 
-      if (response.ok) {
+      const results = await Promise.all(
+        updates.map((update) =>
+          fetch(`${API_BASE_URL}/api/teacher/classroom/work`, {
+            method: 'PUT',
+            headers: auth.getAuthHeaders(),
+            body: JSON.stringify(update)
+          })
+        )
+      );
+
+      const allOk = results.every((res) => res.ok);
+
+      if (allOk) {
         setSubmitted(true);
         setTimeout(() => setSubmitted(false), 3000);
       } else {
@@ -122,40 +150,65 @@ const Grades = () => {
           >
             <option value="">Choose a class...</option>
             {classes.map((cls) => (
-              <option key={cls.id} value={cls.id}>{cls.name} - {cls.section}</option>
+              <option key={cls.id} value={cls.id}>{cls.name} - {cls.session || cls.time || 'N/A'}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {selectedClass && students.length > 0 ? (
+      {selectedClass && classworks.length > 0 ? (
+        <div className="card shadow-sm border-0 mb-4">
+          <div className="card-header bg-white border-bottom">
+            <label className="form-label fw-semibold mb-0">Select Classwork</label>
+          </div>
+          <div className="card-body">
+            <select
+              className="form-select"
+              value={selectedClassWork}
+              onChange={(e) => handleClassWorkSelect(e.target.value)}
+            >
+              <option value="">Choose an assignment...</option>
+              {classworks.map((work) => (
+                <option key={work.id} value={work.id}>
+                  {work.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ) : selectedClass ? (
+        <div className="alert alert-info">
+          <i className="bi bi-info-circle me-2"></i>
+          No classwork found for this class.
+        </div>
+      ) : null}
+
+      {selectedClassWork && workIds.length > 0 ? (
         <form onSubmit={handleSubmitGrades}>
           <div className="card shadow-sm border-0 mb-4">
             <div className="card-header bg-white border-bottom">
-              <h5 className="mb-0">Student Grades</h5>
+              <h5 className="mb-0">Assignment Marks</h5>
             </div>
             <div className="table-responsive">
               <table className="table table-hover mb-0">
                 <thead className="bg-light">
                   <tr>
-                    <th>Student Name</th>
-                    <th>Roll Number</th>
-                    <th>Grade</th>
+                    <th>Work ID</th>
+                    <th>Marks</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map((student) => (
-                    <tr key={student.id}>
-                      <td className="fw-semibold">{student.firstName} {student.lastName}</td>
-                      <td>{student.rollNumber}</td>
+                  {workIds.map((workId) => (
+                    <tr key={workId}>
+                      <td className="fw-semibold">{workId}</td>
                       <td>
                         <input
-                          type="text"
+                          type="number"
                           className="form-control"
-                          value={grades[student.id]}
-                          onChange={(e) => handleGradeChange(student.id, e.target.value)}
-                          placeholder="Enter grade (A, B, C, etc.)"
-                          maxLength="3"
+                          value={grades[workId]}
+                          onChange={(e) => handleGradeChange(workId, e.target.value)}
+                          placeholder="Enter marks"
+                          min="0"
                         />
                       </td>
                     </tr>
@@ -171,10 +224,10 @@ const Grades = () => {
             </div>
           </div>
         </form>
-      ) : selectedClass ? (
+      ) : selectedClassWork ? (
         <div className="alert alert-info">
           <i className="bi bi-info-circle me-2"></i>
-          No students found in this class.
+          No submissions found for this assignment.
         </div>
       ) : null}
     </div>

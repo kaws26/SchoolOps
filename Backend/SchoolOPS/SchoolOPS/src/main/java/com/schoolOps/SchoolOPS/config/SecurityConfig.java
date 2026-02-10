@@ -60,7 +60,7 @@ public class SecurityConfig {
                 "http://localhost:3000",      // React default
                 "http://localhost:4200",      // Angular default
                 "http://localhost:5173",       // Vite default
-                "https://school-ops-wine.vercel.app"  //my deployed 
+                "https://school-ops-wine.vercel.app"  //my deployed
         ));
 
         // Or allow all origins (NOT recommended for production)
@@ -99,43 +99,39 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                //  Enable CORS with custom configuration
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                //  Disable CSRF (REST API)
                 .csrf(csrf -> csrf.disable())
 
-                //  Stateless JWT-based security
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                //  Authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-                        // ---------- PUBLIC APIs ----------
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/public/**"
-                        ).permitAll()
+                        // ---------- PUBLIC ----------
+                        .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
 
-                        // ---------- ROLE BASED APIs ----------
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/teacher/**").hasRole("TEACHER")
-                        .requestMatchers("/api/student/**").hasRole("STUDENT")
-                        .requestMatchers("/api/account/**").hasAnyRole("ADMIN", "ACCOUNTANT")
+                        // ---------- USER ----------
                         .requestMatchers("/api/user/**").authenticated()
+
+                        // ---------- ADMIN SEARCH (ADMIN + TEACHER) ----------
+                        .requestMatchers("/api/admin/search/**").hasAnyRole("ADMIN", "TEACHER")
+
+                        // ---------- ROLE BASED ----------
+                        .requestMatchers("/api/student/**").hasRole("STUDENT")
+                        .requestMatchers("/api/teacher/**").hasRole("TEACHER")
+                        .requestMatchers("/api/account/**").hasAnyRole("ADMIN", "ACCOUNTANT")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // ---------- EVERYTHING ELSE ----------
                         .anyRequest().authenticated()
                 )
 
-                //  Authentication provider
-                .authenticationProvider(authenticationProvider())
 
-                //  JWT filter
+                .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 }

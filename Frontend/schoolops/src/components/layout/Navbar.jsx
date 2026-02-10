@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import auth from "../../utils/auth";
+import API_BASE_URL from '../../config';
+
 
 const Navbar = () => {
   const isAuthenticated = auth.isAuthenticated();
@@ -10,7 +12,7 @@ const Navbar = () => {
     const fetchUserRole = async () => {
       if (isAuthenticated) {
         try {
-          const response = await fetch('/api/user/profile', {
+          const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
             headers: auth.getAuthHeaders()
           });
           if (response.ok) {

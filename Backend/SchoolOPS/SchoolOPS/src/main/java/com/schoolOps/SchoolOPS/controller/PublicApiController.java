@@ -2,14 +2,15 @@ package com.schoolOps.SchoolOPS.controller;
 
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
-import com.schoolOps.SchoolOPS.dto.CourseResponseDto;
-import com.schoolOps.SchoolOPS.dto.GalleryResponseDto;
-import com.schoolOps.SchoolOPS.dto.EnqueryRequestDto;
 import java.util.stream.Collectors;
 
+import com.schoolOps.SchoolOPS.dto.CourseResponseDto;
+import com.schoolOps.SchoolOPS.dto.EnqueryRequestDto;
+import com.schoolOps.SchoolOPS.dto.GalleryResponseDto;
+import com.schoolOps.SchoolOPS.dto.ResetPasswordRequest;
 import com.schoolOps.SchoolOPS.entity.Course;
 import com.schoolOps.SchoolOPS.entity.Enquery;
 import com.schoolOps.SchoolOPS.entity.User;
@@ -19,6 +20,7 @@ import com.schoolOps.SchoolOPS.service.GalleryService;
 import com.schoolOps.SchoolOPS.service.UserService;
 import com.schoolOps.SchoolOPS.utils.Email;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -34,6 +36,7 @@ public class PublicApiController {
     private final UserService userService;
     private final Email emailService;
     private final GalleryService galleryService;
+    private final PasswordEncoder passwordEncoder;
 
     // =================================================
     // HOME DATA
@@ -47,10 +50,9 @@ public class PublicApiController {
                 course.getStudents().size();
             }
         });
-        List<CourseResponseDto> courseDtos = courses.stream().map(CourseResponseDto::fromEntity).collect(Collectors.toList());
-        return ResponseEntity.ok(
-                Map.of("courses", courseDtos)
-        );
+        List<CourseResponseDto> courseDtos =
+                courses.stream().map(CourseResponseDto::fromEntity).collect(Collectors.toList());
+        return ResponseEntity.ok(Map.of("courses", courseDtos));
     }
 
     // =================================================
@@ -104,6 +106,57 @@ public class PublicApiController {
                     Map.of("error", "Invalid data")
             );
         }
+    }
+
+    // =================================================
+    // RESET PASSWORD - VALIDATE TOKEN
+    // =================================================
+    @GetMapping("/reset-password/validate")
+    public ResponseEntity<?> validateResetToken(@RequestParam String token) {
+
+        User user = userService.findByResetToken(token)
+                .orElseThrow(() ->
+                        new RuntimeException("Invalid reset token")
+                );
+
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", "Reset token expired")
+            );
+        }
+
+        return ResponseEntity.ok(
+                Map.of("message", "Reset token is valid")
+        );
+    }
+
+    // =================================================
+    // RESET PASSWORD - SUBMIT NEW PASSWORD
+    // =================================================
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+
+        User user = userService.findByResetToken(request.getToken())
+                .orElseThrow(() ->
+                        new RuntimeException("Invalid reset token")
+                );
+
+        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", "Reset token expired")
+            );
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setFirstLogin(false);
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+
+        userService.save(user);
+
+        return ResponseEntity.ok(
+                Map.of("message", "Password reset successful")
+        );
     }
 
     // =================================================

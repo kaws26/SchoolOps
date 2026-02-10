@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import auth from '../../utils/auth';
 import API_BASE_URL from '../../config';
 
@@ -14,7 +13,7 @@ const MyClasses = () => {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/classes`, {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/courses`, {
         headers: auth.getAuthHeaders()
       });
 
@@ -57,19 +56,19 @@ const MyClasses = () => {
                   <h5 className="card-title">{cls.name}</h5>
                   <p className="text-muted mb-3">
                     <i className="bi bi-tag me-2"></i>
-                    Section: {cls.section}
+                    Session: {cls.session || cls.time || 'N/A'}
                   </p>
                   <div className="row g-3">
                     <div className="col-6">
                       <div className="bg-light p-3 rounded text-center">
                         <small className="text-muted d-block">Students</small>
-                        <h5 className="mb-0 text-primary">{cls.studentCount}</h5>
+                        <h5 className="mb-0 text-primary">{cls.studentNames?.length || 0}</h5>
                       </div>
                     </div>
                     <div className="col-6">
                       <div className="bg-light p-3 rounded text-center">
                         <small className="text-muted d-block">Room</small>
-                        <h5 className="mb-0 text-primary">{cls.room}</h5>
+                        <h5 className="mb-0 text-primary">{cls.classRoomId || 'N/A'}</h5>
                       </div>
                     </div>
                   </div>

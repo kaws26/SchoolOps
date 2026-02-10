@@ -40,6 +40,7 @@ const Login = () => {
         // Fetch user profile to check role
         try {
           const profileResponse = await fetch(`${API_BASE_URL}/api/user/profile`, {
+            method: "GET",
             headers: auth.getAuthHeaders()
           });
 
@@ -48,8 +49,10 @@ const Login = () => {
             // Redirect based on role
             if (userData.role === 'ADMIN') {
               navigate("/admin");
+            } else if (userData.role === 'TEACHER') {
+              navigate("/teacher");
             } else {
-              navigate("/");
+              navigate("/school-home");
             }
           } else {
             // If profile fetch fails, redirect to home

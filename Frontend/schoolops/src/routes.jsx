@@ -21,6 +21,7 @@ import Attendance from "./pages/teacher/Attendance";
 import Announcements from "./pages/teacher/Announcements";
 import TeacherStudents from "./pages/teacher/Students";
 import SchoolHome from "./pages/SchoolHome";
+import ResetPassword from "./pages/ResetPassword";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> }
     ],
+  },
+  {
+  path: "/reset-password",
+  element: <ResetPassword />,
   },
   {
     path: "/login",
@@ -69,4 +74,5 @@ export const router = createBrowserRouter([
       { path: "gallery", element: <Gallery /> }
     ],
   }
+  
 ]);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import auth from '../../utils/auth';
 import API_BASE_URL from '../../config';
 
@@ -8,30 +8,40 @@ const Assignments = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedClass, setSelectedClass] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     dueDate: '',
-    classId: '',
-    attachments: []
+    totalMarks: '',
+    reference: '',
+    classId: ''
   });
   const [classes, setClasses] = useState([]);
-  const navigate = useNavigate();
+  const selectedCourse = classes.find((cls) => String(cls.id) === String(selectedClass));
 
   useEffect(() => {
-    fetchAssignments();
     fetchClasses();
   }, []);
 
-  const fetchAssignments = async () => {
+  useEffect(() => {
+    if (selectedClass) {
+      fetchAssignments(selectedClass);
+    } else {
+      setAssignments([]);
+    }
+  }, [selectedClass]);
+
+  const fetchAssignments = async (classId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/assignments`, {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/api/teacher/classroom/${classId}`, {
         headers: auth.getAuthHeaders()
       });
 
       if (response.ok) {
         const data = await response.json();
-        setAssignments(data);
+        setAssignments(Array.isArray(data) ? data : []);
       } else {
         setError('Failed to load assignments');
       }
@@ -45,32 +55,53 @@ const Assignments = () => {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/classes`, {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/courses`, {
         headers: auth.getAuthHeaders()
       });
 
       if (response.ok) {
         const data = await response.json();
-        setClasses(data);
+        setClasses(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Error fetching classes:', error);
+    } finally {
+      if (!selectedClass) {
+        setLoading(false);
+      }
     }
   };
 
   const handleCreateAssignment = async (e) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.classId || !formData.dueDate) {
+    if (!formData.title || !formData.classId || !formData.dueDate || !formData.totalMarks) {
       setError('Please fill all required fields');
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/assignments`, {
+      const classWorkPayload = {
+        title: formData.title,
+        description: formData.description,
+        totalMarks: Number(formData.totalMarks),
+        lastDate: formData.dueDate,
+        reference: formData.reference || null
+      };
+
+      const payload = new FormData();
+      payload.append(
+        'classWork',
+        new Blob([JSON.stringify(classWorkPayload)], { type: 'application/json' })
+      );
+      payload.append('courseId', formData.classId);
+
+      const response = await fetch(`${API_BASE_URL}/api/teacher/classroom/classwork`, {
         method: 'POST',
-        headers: auth.getAuthHeaders(),
-        body: JSON.stringify(formData)
+        headers: {
+          Authorization: `Bearer ${auth.getToken()}`
+        },
+        body: payload
       });
 
       if (response.ok) {
@@ -79,10 +110,11 @@ const Assignments = () => {
           title: '',
           description: '',
           dueDate: '',
-          classId: '',
-          attachments: []
+          totalMarks: '',
+          reference: '',
+          classId: ''
         });
-        fetchAssignments();
+        fetchAssignments(formData.classId);
       } else {
         setError('Failed to create assignment');
       }
@@ -96,13 +128,15 @@ const Assignments = () => {
     if (!window.confirm('Are you sure you want to delete this assignment?')) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/assignments/${assignmentId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/teacher/classroom/classwork/${assignmentId}`, {
         method: 'DELETE',
         headers: auth.getAuthHeaders()
       });
 
       if (response.ok) {
-        fetchAssignments();
+        if (selectedClass) {
+          fetchAssignments(selectedClass);
+        }
       } else {
         setError('Failed to delete assignment');
       }
@@ -136,6 +170,24 @@ const Assignments = () => {
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
+
+      <div className="card shadow-sm border-0 mb-4">
+        <div className="card-header bg-white border-bottom">
+          <label className="form-label fw-semibold mb-0">Select Class</label>
+        </div>
+        <div className="card-body">
+          <select
+            className="form-select"
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+          >
+            <option value="">Choose a class...</option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>{cls.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Create Assignment Modal */}
       {showModal && (
@@ -192,14 +244,38 @@ const Assignments = () => {
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="dueDate" className="form-label">Due Date *</label>
+                    <label htmlFor="dueDate" className="form-label">Last Date *</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       className="form-control"
                       id="dueDate"
                       value={formData.dueDate}
                       onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
                       required
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="totalMarks" className="form-label">Total Marks *</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="totalMarks"
+                      min="0"
+                      value={formData.totalMarks}
+                      onChange={(e) => setFormData({...formData, totalMarks: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="reference" className="form-label">Reference (optional)</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="reference"
+                      value={formData.reference}
+                      onChange={(e) => setFormData({...formData, reference: e.target.value})}
                     />
                   </div>
                 </div>
@@ -222,7 +298,7 @@ const Assignments = () => {
       )}
 
       {/* Assignments List */}
-      {assignments.length > 0 ? (
+      {selectedClass && assignments.length > 0 ? (
         <div className="row">
           {assignments.map((assignment) => (
             <div key={assignment.id} className="col-md-6 col-lg-4 mb-4">
@@ -231,7 +307,7 @@ const Assignments = () => {
                   <h5 className="card-title">{assignment.title}</h5>
                   <p className="text-muted small mb-2">
                     <i className="bi bi-people me-2"></i>
-                    {assignment.className}
+                    {selectedCourse?.name || 'Selected Class'}
                   </p>
                   {assignment.description && (
                     <p className="card-text text-muted small mb-3">
@@ -240,14 +316,14 @@ const Assignments = () => {
                   )}
                   <div className="mb-3">
                     <span className={`badge bg-${
-                      new Date(assignment.dueDate) > new Date() ? 'info' : 'danger'
+                      assignment.lastDate && new Date(assignment.lastDate) >= new Date() ? 'info' : 'danger'
                     }`}>
-                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                      Due: {assignment.lastDate ? new Date(assignment.lastDate).toLocaleDateString() : 'N/A'}
                     </span>
                   </div>
                   <small className="text-muted d-block">
                     <i className="bi bi-file-earmark me-2"></i>
-                    Submissions: {assignment.submissionCount || 0}
+                    Submissions: {assignment.workIds?.length || 0}
                   </small>
                 </div>
                 <div className="card-footer bg-white border-top">
@@ -267,10 +343,15 @@ const Assignments = () => {
             </div>
           ))}
         </div>
-      ) : (
+      ) : selectedClass ? (
         <div className="alert alert-info">
           <i className="bi bi-info-circle me-2"></i>
           No assignments created yet.
+        </div>
+      ) : (
+        <div className="alert alert-info">
+          <i className="bi bi-info-circle me-2"></i>
+          Select a class to view assignments.
         </div>
       )}
     </div>
