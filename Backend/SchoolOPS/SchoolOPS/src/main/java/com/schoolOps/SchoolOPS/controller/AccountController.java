@@ -3,7 +3,7 @@ package com.schoolOps.SchoolOPS.controller;
 import java.security.Principal;
 import java.util.List;
 
-import com.schoolOps.SchoolOPS.entity.Account;
+import com.schoolOps.SchoolOPS.dto.AccountResponseDto;
 import com.schoolOps.SchoolOPS.entity.Transaction;
 import com.schoolOps.SchoolOPS.entity.User;
 import com.schoolOps.SchoolOPS.service.AccountService;
@@ -28,7 +28,7 @@ public class AccountController {
     // GET: ALL ACCOUNTS
     // -------------------------------------------------
     @GetMapping
-    public ResponseEntity<List<Account>> getAllAccounts() {
+    public ResponseEntity<List<AccountResponseDto>> getAllAccounts() {
         return ResponseEntity.ok(accountService.getAllAccounts());
     }
 
@@ -36,7 +36,7 @@ public class AccountController {
     // GET: SINGLE ACCOUNT
     // -------------------------------------------------
     @GetMapping("/{accountId}")
-    public ResponseEntity<Account> getAccountById(
+    public ResponseEntity<AccountResponseDto> getAccountById(
             @PathVariable Long accountId
     ) {
         return ResponseEntity.ok(
@@ -55,8 +55,10 @@ public class AccountController {
     ) {
 
         User admin = userService.getUserByUsername(principal.getName());
+
         transaction.setRemarks(
-                transaction.getRemarks() + " / " + admin.getName()
+                (transaction.getRemarks() != null ? transaction.getRemarks() : "")
+                        + " / " + admin.getName()
         );
 
         accountService.makeTransaction(transaction, accountId);
@@ -68,7 +70,7 @@ public class AccountController {
     // POST: SEARCH ACCOUNTS
     // -------------------------------------------------
     @PostMapping("/search")
-    public ResponseEntity<List<Account>> searchAccounts(
+    public ResponseEntity<List<AccountResponseDto>> searchAccounts(
             @RequestParam String query
     ) {
         return ResponseEntity.ok(

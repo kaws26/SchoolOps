@@ -1,5 +1,6 @@
 package com.schoolOps.SchoolOPS.dto;
 
+import com.schoolOps.SchoolOPS.entity.Transaction;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,26 +11,26 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionResponseDto {
+
     private Long id;
-    private String accountId;
     private String type;
+    private float amount;
+    private float balanceAfterTransaction;
+    private String mode;
     private String remarks;
     private LocalDateTime timestamp;
-    private String mode;
-    private float balance;
-    private float amount;
 
-    public static TransactionResponseDto fromEntity(com.schoolOps.SchoolOPS.entity.Transaction transaction) {
+    public static TransactionResponseDto fromEntity(Transaction transaction) {
         if (transaction == null) return null;
+
         return new TransactionResponseDto(
-            transaction.getId(),
-            transaction.getAccount() != null ? transaction.getAccount().getId().toString() : null,
-            transaction.getType(),
-            transaction.getRemarks(),
-            transaction.getTimestamp(),
-            transaction.getMode(),
-            transaction.getBalance(),
-            transaction.getAmount()
+                transaction.getId(),
+                transaction.getType(),
+                transaction.getAmount(),
+                transaction.getBalance(),
+                transaction.getMode(),
+                transaction.getRemarks(),
+                transaction.getTimestamp()
         );
     }
 }

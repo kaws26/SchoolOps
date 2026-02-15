@@ -115,8 +115,8 @@ public class StudentController {
         this.amount = Float.parseFloat(data.get("amount").toString());
 
         RazorpayClient client = new RazorpayClient(
-                "rzp_test_2ra6BDdCQY0C8x",
-                "mJDgHSv7tT2WkcpgXwpDrcsh"
+                "rzp_test_SGUXdDf8BB9T6g",
+                "cWsUxkn22eyHmovt248wLiEL"
         );
 
         JSONObject options = new JSONObject();

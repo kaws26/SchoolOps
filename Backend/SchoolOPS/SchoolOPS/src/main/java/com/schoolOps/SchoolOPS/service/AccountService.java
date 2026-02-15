@@ -1,10 +1,10 @@
 package com.schoolOps.SchoolOPS.service;
 
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.schoolOps.SchoolOPS.dto.AccountResponseDto;
 import com.schoolOps.SchoolOPS.entity.Account;
 import com.schoolOps.SchoolOPS.entity.Student;
 import com.schoolOps.SchoolOPS.entity.Teacher;
@@ -12,11 +12,11 @@ import com.schoolOps.SchoolOPS.entity.Transaction;
 import com.schoolOps.SchoolOPS.repository.AccountRepository;
 import com.schoolOps.SchoolOPS.repository.StudentRepository;
 import com.schoolOps.SchoolOPS.repository.TeacherRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
-
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,10 @@ public class AccountService {
     private final TeacherRepository teacherRepository;
     private final AccountRepository accountRepository;
 
-    // ---------- BASIC CRUD ----------
+    // -------------------------------------------------
+    // BASIC CRUD
+    // -------------------------------------------------
+
     public Account saveAccount(Account account) {
         log.debug("Saving account");
         return accountRepository.save(account);
@@ -42,12 +45,16 @@ public class AccountService {
         accountRepository.delete(account);
     }
 
-    // ---------- OPEN ACCOUNTS ----------
+    // -------------------------------------------------
+    // OPEN ACCOUNTS
+    // -------------------------------------------------
+
     public void openStudentAccount(Student student) {
 
         Account account = new Account();
         account.setUser(student.getUser());
         account.setStudent(student);
+        account.setAccountBalance(0f);
 
         Account savedAccount = accountRepository.save(account);
 
@@ -61,6 +68,7 @@ public class AccountService {
 
         Account account = new Account();
         account.setUser(teacher.getUser());
+        account.setAccountBalance(0f);
 
         Account savedAccount = accountRepository.save(account);
 
@@ -70,22 +78,40 @@ public class AccountService {
         log.info("Teacher account opened | teacherId={}", teacher.getId());
     }
 
-    // ---------- FETCH ----------
-    public List<Account> getAllAccounts() {
-        return accountRepository.findAll();
+    // -------------------------------------------------
+    // FETCH (RETURN DTOs)
+    // -------------------------------------------------
+
+    @Transactional
+    public List<AccountResponseDto> getAllAccounts() {
+
+        return accountRepository.findAll()
+                .stream()
+                .map(AccountResponseDto::fromEntity)
+                .toList();
     }
 
-    public Account getAccountById(Long accountId) {
-        return accountRepository.findById(accountId)
+    @Transactional
+    public AccountResponseDto getAccountById(Long accountId) {
+
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Account not found with id: " + accountId)
                 );
+
+        return AccountResponseDto.fromEntity(account);
     }
 
-    // ---------- TRANSACTIONS ----------
+    // -------------------------------------------------
+    // TRANSACTIONS
+    // -------------------------------------------------
+
     public void makeTransaction(Transaction transaction, Long accountId) {
 
-        Account account = getAccountById(accountId);
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Account not found with id: " + accountId)
+                );
 
         List<Transaction> transactions =
                 account.getTransactions() != null
@@ -95,11 +121,13 @@ public class AccountService {
         transaction.setAccount(account);
         transaction.setTimestamp(LocalDateTime.now());
 
+        // Convert debit to negative
         if ("DEBIT".equalsIgnoreCase(transaction.getType())) {
             transaction.setAmount(-Math.abs(transaction.getAmount()));
         }
 
         float updatedBalance = account.getAccountBalance() + transaction.getAmount();
+
         account.setAccountBalance(updatedBalance);
         transaction.setBalance(updatedBalance);
 
@@ -109,20 +137,25 @@ public class AccountService {
         accountRepository.save(account);
 
         log.info(
-                "Transaction completed | accountId={} | type={} | amount={}",
+                "Transaction completed | accountId={} | type={} | amount={} | newBalance={}",
                 accountId,
                 transaction.getType(),
-                transaction.getAmount()
+                transaction.getAmount(),
+                updatedBalance
         );
     }
 
-    // ---------- SEARCH ----------
-    public List<Account> searchAccount(String query) {
-        List<Account> accounts =
-                accountRepository.findByStudent_NameContainingIgnoreCase(query);
+    // -------------------------------------------------
+    // SEARCH (RETURN DTOs)
+    // -------------------------------------------------
 
-        log.debug("Account search completed | query={} | resultCount={}", query, accounts.size());
-        return accounts;
+    @Transactional
+    public List<AccountResponseDto> searchAccount(String query) {
+
+        return accountRepository
+                .findByStudent_NameContainingIgnoreCase(query)
+                .stream()
+                .map(AccountResponseDto::fromEntity)
+                .toList();
     }
 }
-
