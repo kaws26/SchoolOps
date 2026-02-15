@@ -31,6 +31,13 @@ const AdminDashboard = () => {
       color: 'warning'
     },
     {
+      title: 'Manage Accounts',
+      description: 'Run financial operations, reports, payroll lookup and analytics',
+      icon: 'bi-cash-coin',
+      path: '/admin/accounts',
+      color: 'dark'
+    },
+    {
       title: 'Enquiries',
       description: 'View and respond to contact enquiries',
       icon: 'bi-envelope',

@@ -49,6 +49,7 @@ const AdminLayout = () => {
     { path: '/admin/courses', label: 'Courses', icon: 'bi-book' },
     { path: '/admin/students', label: 'Students', icon: 'bi-people' },
     { path: '/admin/users', label: 'Users', icon: 'bi-person-circle' },
+    { path: '/admin/accounts', label: 'Manage Accounts', icon: 'bi-cash-coin' },
     { path: '/admin/enquiries', label: 'Enquiries', icon: 'bi-envelope' },
     { path: '/admin/notices', label: 'Notices', icon: 'bi-megaphone' },
     { path: '/admin/gallery', label: 'Gallery', icon: 'bi-images' }
