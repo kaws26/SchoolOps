@@ -98,6 +98,7 @@ SchoolOps/
 │   ├── schoolops/              # Main React application
 │   └── README.md               # Frontend setup instructions
 ├── Backend/                    # Spring Boot backend application
+│   ├── schoolops/              # Spring Boot root folder
 │   └── README.md               # Backend setup instructions
 ├── CONTRIBUTING.md             # Contribution guidelines
 └── README.md                   # This file
