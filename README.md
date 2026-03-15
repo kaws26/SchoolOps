@@ -184,11 +184,6 @@ For support, questions, or feedback:
 
 ---
 
-## 🌟 Acknowledgments
 
-- Thanks to all contributors and the open-source community
-- Special thanks to [add any acknowledgments]
-
----
 
 **Built with ❤️ by the SchoolOps Team**
