@@ -108,7 +108,7 @@ SchoolOps/
 
 ## 📸 Screenshots
 
-[Click here to view screenshots](./Schoolops_screenshots.pdf)
+[Click here to view screenshots](./SCHOOLOPS%20Screenshots.pdf)
 
 ---
 
