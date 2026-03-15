@@ -1,10 +1,10 @@
-# 🎓 SchoolOps
+# SchoolOps
 
 > A comprehensive, modern school management system designed to streamline and automate school administration processes efficiently.
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Project Overview](#-project-overview)
 - [Key Features](#-key-features)
@@ -18,7 +18,7 @@
 
 ---
 
-## 🎯 Project Overview
+##  Project Overview
 
 SchoolOps is a full-stack web application that modernizes school management by providing an intuitive, centralized platform for administrators, teachers, and students. It eliminates the need for manual paperwork and scattered systems by offering a unified solution for managing academics, administration, and student information.
 
@@ -35,38 +35,38 @@ SchoolOps solves these challenges by providing a centralized, web-based platform
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
 ### For Administrators
-- 📊 **Dashboard Overview**: Real-time statistics and system overview
-- 👥 **User Management**: Manage teachers, students, and staff accounts
-- 📚 **Academic Management**: Handle classes, sections, and academic years
-- 📋 **Report Generation**: Generate comprehensive reports on various metrics
-- ⚙️ **System Configuration**: Customize school settings and policies
+-  **Dashboard Overview**: Real-time statistics and system overview
+-  **User Management**: Manage teachers, students, and staff accounts
+-  **Academic Management**: Handle classes, sections, and academic years
+-  **Report Generation**: Generate comprehensive reports on various metrics
+-  **System Configuration**: Customize school settings and policies
 
 ### For Teachers
-- 📝 **Class Management**: Manage classes, students, and attendance
-- 🎓 **Grade Management**: Record and track student grades
-- 📧 **Communication**: Direct messaging with students and parents
-- 📅 **Timetable Management**: View and manage class schedules
-- 📊 **Performance Analytics**: Track student progress and performance
+-  **Class Management**: Manage classes, students, and attendance
+-  **Grade Management**: Record and track student grades
+-  **Communication**: Direct messaging with students and parents
+-  **Timetable Management**: View and manage class schedules
+-  **Performance Analytics**: Track student progress and performance
 
 ### For Students
-- 📚 **Academic Portal**: View grades, attendance, and assignments
-- 📧 **Messaging**: Communicate with teachers and classmates
-- 📅 **Schedule Access**: View personal timetable and important dates
-- 📋 **Assignment Tracking**: View and submit assignments
-- 📊 **Performance Tracking**: Monitor personal academic progress
+-  **Academic Portal**: View grades, attendance, and assignments
+-  **Messaging**: Communicate with teachers and classmates
+-  **Schedule Access**: View personal timetable and important dates
+-  **Assignment Tracking**: View and submit assignments
+-  **Performance Tracking**: Monitor personal academic progress
 
 ### General Features
-- 🔐 **Secure Authentication**: Role-based access control
-- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
-- ⚡ **Real-time Updates**: Live notifications and updates
-- 🎨 **User-friendly Interface**: Intuitive and easy-to-navigate UI
+-  **Secure Authentication**: Role-based access control
+-  **Responsive Design**: Works seamlessly on desktop and mobile devices
+-  **Real-time Updates**: Live notifications and updates
+-  **User-friendly Interface**: Intuitive and easy-to-navigate UI
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 ### Frontend
 - **React**: Modern UI library for building interactive interfaces
@@ -90,7 +90,7 @@ SchoolOps solves these challenges by providing a centralized, web-based platform
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 SchoolOps/
@@ -106,13 +106,13 @@ SchoolOps/
 
 ---
 
-## 📸 Screenshots
+##  Screenshots
 
 [Click here to view screenshots](./SCHOOLOPS%20Screenshots.pdf)
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Quick Start Guide
 
@@ -140,7 +140,7 @@ SchoolOps/
 
 ---
 
-## 📚 Documentation
+##  Documentation
 
 For comprehensive documentation, please refer to:
 
@@ -150,7 +150,7 @@ For comprehensive documentation, please refer to:
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 We welcome contributions from the community! Please read our [Contributing Guidelines](./CONTRIBUTING.md) to understand:
 - How to report bugs
@@ -169,13 +169,13 @@ We welcome contributions from the community! Please read our [Contributing Guide
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the [LICENSE](LICENSE) - see the LICENSE file for details.
 
 ---
 
-## 📞 Support & Contact
+##  Support & Contact
 
 For support, questions, or feedback:
 - Create an [Issue](https://github.com/kaws26/SchoolOps/issues)
