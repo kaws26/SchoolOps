@@ -140,4 +140,3 @@ Once the application is running, you can access the API endpoints. (Add Swagger/
 - **File Upload Errors**: Ensure Cloudinary credentials are valid.
 
 For more help, refer to the Spring Boot documentation or check the logs in the `logs/` directory.</content>
-<parameter name="filePath">C:\Users\lenovo\Desktop\SchoolOps\SchoolOps\Backend\SchoolOPS\SchoolOPS\README.md
