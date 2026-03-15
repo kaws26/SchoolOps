@@ -71,11 +71,11 @@ SchoolOps solves these challenges by providing a centralized, web-based platform
 ### Frontend
 - **React**: Modern UI library for building interactive interfaces
 - **Vite**: Fast build tool for optimized development experience
-- **[Add Frontend Technologies]**: *UI Framework, State Management, Styling, etc.*
 
 ### Backend
 - **Spring Boot**: Robust Java framework for enterprise applications
-- **[Add Backend Technologies]**: *Database, Authentication, APIs, etc.*
+- **Database**: MySQL
+- **Authentication**: JWT
 
 ### Features & Tools
 - RESTful API Architecture
