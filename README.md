@@ -108,26 +108,7 @@ SchoolOps/
 
 ## 📸 Screenshots
 
-### Dashboard
-*[Screenshot of main dashboard - showing overview and key metrics]*
-
-### Student Management
-*[Screenshot of student management interface]*
-
-### Grade Management
-*[Screenshot of grade management and tracking system]*
-
-### Class Timetable
-*[Screenshot of timetable management interface]*
-
-### Attendance Tracking
-*[Screenshot of attendance marking system]*
-
-### Communication Module
-*[Screenshot of messaging/communication interface]*
-
-### Mobile Responsive View
-*[Screenshot showing mobile responsiveness]*
+[Click here to view screenshots](./Schoolops_screenshots.pdf)
 
 ---
 
